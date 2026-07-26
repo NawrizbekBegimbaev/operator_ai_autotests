@@ -13,7 +13,23 @@
 >
 > **Jarayon bo'yicha ikki ogohlantirish:**
 > 1. **Biz jangovar tizimda ma'lumot yaratdik/o'zgartirdik.** Ayrim baglar prodni o'zgartiruvchi amallar bilan takrorlangan: ROP yaratish (BUG-007), tarifni tahrirlash (BUG-008), ROPni deaktivatsiya qilish (BUG-006). Prodda test ROPlar va o'zgartirilgan tariflar qolgan bo'lishi mumkin — **topib tozalash** (yoki qaytarish) kerak, haqiqiy ma'lumotlarga xalaqit bermasin. Nima yaratilgan/o'zgartirilganini yozib qo'ying.
-> 2. **Bundan buyon funksional tekshiruvlar (yaratish, tahrirlash, deaktivatsiya) staging/test da bajariladi, prodda emas** — loyiha qoidasiga ko'ra. Prodda faqat passiv kuzatuv (sahifani ochib ko'rish) mumkin, ma'lumotni o'zgartirmasdan. Agar staging muhiti yo'q bo'lsa — bu o'zi jamoaga savol ko'tarish uchun sabab (test AmoCRM/OnlinePBX bilan test stend kerak).
+> 2. **Bundan buyon funksional tekshiruvlar (yaratish, tahrirlash, deaktivatsiya) staging/test da bajariladi, prodda emas** — loyiha qoidasiga ko'ra. Prodda faqat passiv kuzatuv (sahifani ochib ko'rish) mumkin, ma'lumotni o'zgartirmasdan.
+>
+> **[25.07 yangilandi] ✅ Muhitlarga kirish olindi** — staging ga ham, production ga ham. «Tekshiradigan joy yo'q» muammosi hal bo'ldi.
+>
+> **Shu paytdan boshlab qoida:**
+>
+> | Muhit | Nima qilamiz |
+> | --- | --- |
+> | **staging** | Barcha funksional tekshiruvlar: yaratish, o'zgartirish, o'chirish, baglarni takrorlash, avtotestlar |
+> | **production** | **Faqat passiv kuzatuv.** Sahifani ochib ko'rish. Hech narsani o'zgartirmaslik |
+>
+> Prodga kirish — bu hodisani tahlil qilish va xatti-harakatni solishtirish imkoni, **u yerda test qilishga ruxsat emas**.
+>
+> **Bu fayl uchun ikki oqibat:**
+>
+> 1. **Sakkizta bagning ham «Muhit» maydonida production turibdi.** Ularni **staging da qayta tekshirish** kerak — bir qismi boshqa ishlar bilan birga tuzatilgan bo'lishi mumkin. Qayta tekshirilmaguncha holat «Yangi» bo'lib qoladi;
+> 2. **Prod bo'yicha qarz:** iyul tekshiruvlaridan qolgan test ROPlar, o'zgartirilgan tariflar va deaktivatsiya qilingan foydalanuvchini topib tozalash kerak. Ro'yxat — yuqoridagi ogohlantirishda.
 
 ---
 
@@ -47,6 +63,7 @@
 | [BUG-006](#bug-006) | 🔒 ROP deaktivatsiyasidan keyin ochiq sessiya tugamaydi — deaktivatsiya qilingan foydalanuvchi ishlashda davom etadi (~15 daqiqagacha) | Admin — avtorizatsiya / deaktivatsiya | P2 | 🔴 Yangi |
 | [BUG-007](#bug-007) | Bitta telefon raqamiga bir nechta ROP yaratish mumkin — telefon unikal ekani tekshirilmaydi | Admin — Super-admin, ROP yaratish | P2 | 🔴 Yangi |
 | [BUG-008](#bug-008) | Tarifni tahrirlashda «Narx» maydoni istalgan to'g'ri songa «Invalid input» beradi — narxni saqlab bo'lmaydi | Admin — Super-admin, tariflar muharriri | P2 | 🔴 Yangi |
+| [BUG-009](#bug-009) | 🔒 Gemini kaliti loglarga chiqib ketgan — kod tuzatilgan, kalit 25.07 da almashtirilgan | Backend — AI integratsiyasi | **P1** | 🟢 **Tuzatilgan**, tekshiruv kutilmoqda |
 
 ---
 
@@ -322,8 +339,13 @@ _(video/skrinshotlar ixtiyoriy — videoda ko'rgazmali)_
 - Yoki access-token TTL ni qisqartirish va/yoki bekor qilingan tokenlarning «qora ro'yxati»ni qo'shish.
 
 **Hujjat bilan bog'liqlik / jamoadan aniqlash:**
-- `MVP-Scope.md` da «Account deactivation (ROP deactivates operator, Admin deactivates ROP)» **Open** deb belgilangan — ya'ni funksiya rasman hali tayyor emas. Ehtimol, sessiyani darhol uzish shunchaki tugatilmagan. **Jamoadan aniqlang**, deaktivatsiya tezligiga talab qanday bo'lishi kerak (darhol / ~15 daq oyna maqbulmi). Kerak bo'lsa `03-questions-for-team.md` da savol sifatida rasmiylashtiring.
+- ~~`MVP-Scope.md` da deaktivatsiya **Open** deb belgilangan — ehtimol, funksiya shunchaki tugatilmagan.~~
+  **[25.07 yangilandi] Bu izoh endi ishlamaydi.** 24.07 dagi yangi skoupda hisobni deaktivatsiya qilish **tayyor** deb belgilangan (backend ham, frontend ham), ish jurnalida esa alohida task bor: «deaktivatsiya qilinganga kirish va tokenni yangilash bloklanadi, ma'lumot saqlanadi» **[Ж]**.
+
+  Ya'ni funksiya **tugallangan** deb hisoblanadi — ammo deaktivatsiya qilingan foydalanuvchi ishlashda davom etadigan 15 daqiqalik oyna joyida qolgan. Demak bu «tugatilmagan ish» emas, **tayyor funksiyadagi ongli yoki sezilmagan bo'shliq**. Shu sababli bagning muhimligi **oshadi**: ilgari ishlab chiqishni kutish mumkin edi, endi kutadigan narsa yo'q.
+- **Jamoadan aniqlang**: deaktivatsiya darhol ishlashi kerakmi yoki 15 daqiqagacha oyna maqbulmi? Agar maqbul bo'lsa — buni talabga aniq yozish kerak, token amal qilish muddatining nojo'ya ta'siri sifatida qoldirmasdan.
 - Xuddi shu mexanizm **operator deaktivatsiyasiga** ham tegishli (nafaqat ROP). Tekshiring va takrorlansa, shu yerga qo'shing.
+- ⚠️ **Yangi versiyada qayta tekshirish kerak.** Bag 23.07 da prodda topilgan, deaktivatsiya bo'yicha ishlar esa undan oldin bo'lgan. Yangi backend o'rnatilgan stendda xatti-harakat boshqacha bo'lishi mumkin — tekshirilmaguncha holat «Yangi» bo'lib qoladi.
 
 ---
 
@@ -405,3 +427,87 @@ Maydon ostida «Invalid input», ramka qizil, «Saqlash» tugmasi nofaol — hec
 **QA izohi:**
 1. Bu zod-union orqali sonli maydonli yagona formami? Boshqa sonli maydonlarni tekshiring (masalan operatordagi «Maosh» / `salary` — u yerda `z...positive`, kiritish ham satr bo'lib ketishi mumkin). Takrorlansa — bir xil sabab (sonli maydonlar koersiya qilinmaydi).
 2. `0` (Shartnomaviy) qiymati saqlanishini tekshiring — bo'sh qiymat `z.literal('')` ga to'g'ri keladi, `"0"` satri sifatida kiritilgan `0` esa, ehtimol, «Invalid input» beradi.
+
+---
+
+<a id="bug-009"></a>
+### BUG-009. 🔒 Gemini kaliti loglarga chiqib ketgan va hali ham almashtirilmagan
+
+| Platforma | Ilova | Muhit | Tavsif |
+| --- | --- | --- | --- |
+| Backend (Go) | Google Gemini integratsiyasi | staging / production | AI ga kirish kaliti so'rov manzilida uzatilardi va tarmoq xatosida to'liq holda logga tushardi |
+
+**Muhimlik:** P1 — xavfsizlik muammosi   **Holat:** 🟢 **25.07.2026 da tuzatilgan**, biz tomondan tekshiruv kutilmoqda   **Kiritilgan sana:** 25.07.2026
+
+> ### ✅ Ikkala qism ham yopildi
+>
+> | Muammoning qismi | Kim yopdi | Holat |
+> | --- | --- | --- |
+> | Kalit manzilda ketardi va logga tushardi | Dasturchilar, 24.07 | ✅ Sarlavhaga ko'chirildi, 5 ta chaqiruv joyi |
+> | Kompromis bo'lgan kalit ishlashda davom etardi | Buyurtmachi, **25.07** | ✅ **Almashtirish bajarildi** |
+>
+> **Yakuniy yopishdan oldin bizga qolgani:**
+>
+> - [ ] **V-11:** kod bo'yicha manzilda kalit bilan chaqiruv qolmaganiga ishonch hosil qilish;
+> - [ ] staging da Gemini ga murojaat xatosini chaqirib, kalit logda paydo bo'lmasligini tekshirish;
+> - [ ] **xarajatlar tarixini tekshirish** — quyidagi alohida bandga qarang.
+>
+> Bu uch band bajarilmaguncha holat «Tekshirilgan» emas, «Tuzatilgan» bo'lib qoladi.
+>
+> ### 💰 Alohida: xarajatlar tarixini tekshirish
+>
+> Kalit ochiq edi va **aynan shu davrda Gemini ning oylik xarajat chegarasi tugadi** — shu sababli transkripsiya hozir umuman ishlamayapti. Bu tasodifni tekshirish kerak.
+>
+> Tekshiruv arzon, va har qanday natija foydali:
+> - **biz qilmagan xarajatlar bor** → chegara qayerga ketgani ayon bo'ladi va loyihada maxfiy ma'lumotlar bilan ishlashni qayta ko'rib chiqish uchun sabab;
+> - **begona xarajat yo'q** → chegarani o'zimiz sarfladik, uni ko'tarish kerak. Buni ham bilish kerak — mijozlar soni oshganda yana shu muammoga duch kelamiz.
+
+**Manba:** `docs/WORK_LOG_4.md`, 4-bo'lim — staging loglarini tahlil qilishda dasturchilarning o'zlari topgan.
+⚠️ **Biz topmadik va kod bilan solishtirmadik [Ж].** Bag sifatida kiritilyapti, chunki kerakli amal (kalitni almashtirish) 24.07 holatiga **bajarilmagan** va buyurtmachi tomonida turibdi.
+
+**Oddiy tilda tavsif:**
+
+AI ga kirish kaliti — bu bizning server qo'ng'iroqlarni qayta ishlash uchun to'lov qiladigan parol. U **to'g'ridan-to'g'ri manzil ichida** uzatilardi: `...:generateContent?key=AIza...`.
+
+Odatda manzilni hech kim ko'rmaydi. Ammo so'rov tarmoq sababli yiqilganda (taymaut, DNS ishlamasligi) kutubxona logga **butun manzilni** yozadi — kalit bilan birga. Bunday xatolar bo'lgan, demak kalit loglarda bor.
+
+O'xshatish: seyf parolini konvertga yozib, uni stol tortmasida saqlash. Hammasi tinch bo'lganda hech kim ko'rmaydi. Lekin yong'in signali bo'lishi bilan konvert koridordagi hammaning ko'z o'ngida qoladi.
+
+**Dasturchilar allaqachon tuzatgani:**
+- kalit manzildan **so'rov sarlavhasiga** (`x-goog-api-key`) ko'chirildi;
+- **beshta** chaqiruv joyi ham tuzatildi: qo'ng'iroq transkripsiyasi, forma maydonlarini ajratish, operatorga tavsiya, bitim tahlili (ikki joy);
+- qidiruv bilan tasdiqlandi: manzilda kalit bilan chaqiruv qolmagan.
+
+**Tuzatilmagani — bagning mohiyati:**
+
+Koddagi tuzatish **kelajakdagi** chiqib ketishni to'xtatadi. Loglarga allaqachon tushgan kalit esa **amal qilishda davom etadi**. U almashtirilmaguncha, stend loglariga (yoki ularning nusxasi, eksporti, skrinshotiga) kirish imkoni bo'lgan har kim undan foydalana oladi.
+
+**Takrorlash qadamlari:**
+1. Tuzatishdan oldingi (24.07 gacha) backend loglarini oching.
+2. Gemini ga murojaat xatosi yozuvlarini toping (taymaut yoki tarmoq xatosi).
+3. Xato matnida `key=` parametri bilan to'liq so'rov manzili ko'rinadi.
+
+**Kutilgan natija:**
+Kalit hech qanday xatoda loglarda uchramaydi. Kompromis bo'lgan kalit bekor qilingan, yangisi yaratilgan, barcha muhitlarda `GEMINI_API_KEY` yangilangan.
+
+**Haqiqiy natija (kiritilgan paytda):**
+Kalit 24.07 gacha bo'lgan loglarda mavjud edi va o'sha paytda bekor qilinmagandi.
+**[25.07 yangilandi]** Almashtirish bajarildi — eski kalit bekor qilindi, yangisi ishlamoqda.
+
+**Bu nima bilan tahdid qiladi:**
+1. **Bizning hisobimizdan begona xarajatlar.** Kalit pullik AI ga kirish beradi. Ayniqsa oylik xarajat chegarasi **allaqachon tugagani** hisobga olinsa — bularning bog'liqligini tekshirish kerak.
+2. Bizning nomimizdan **qo'ng'iroqlar mazmunini qayta ishlashga kirish**.
+3. Kalit log saqlash tizimlariga, zaxira nusxalarga, chatdagi skrinshotlarga tushgan bo'lishi mumkin — «loglarni tozalash» muammoni hal qilmaydi. **Yagona ishonchli yechim — almashtirish.**
+
+**Nima qilish kerak edi (jamoa uchun):**
+1. ✅ AI Studio kabinetida **eski kalitni bekor qilish** — 25.07 da bajarildi.
+2. ✅ Yangisini yaratish va barcha muhitlarda `GEMINI_API_KEY` ni yangilash — 25.07 da bajarildi.
+3. ⏳ Xarajatlar tarixini biz qilmagan foydalanish bo'yicha tekshirish.
+4. ⏳ Kalit boshqa joylarda qolmaganini tekshirish: CI konfiguratsiyalari, yozishmalar, ekran suratlari.
+
+**Bog'liqlik:**
+- `01-project-analysis.md` dagi **R-11** riski;
+- `06-scope-status.md`, 4-bo'limdagi 1-blokerr;
+- **V-11** tekshiruvi: kod bo'yicha manzilda kalit qolmaganiga ishonch hosil qilish.
+
+**QA izohi:** bu bagning holati **kod o'zgarishi bilan emas, buyurtmachi tomonidagi amal bilan** yopildi — va bu kam uchraydigan, ammo muhim bag turi. Dastur 24.07 da tuzatildi, lekin haqiqiy xavf kalit almashtirilgunicha yana bir sutka saqlanib turdi. Esda tutish kerak: maxfiy ma'lumotlar haqida gap ketganda **«kod tuzatildi» va «muammo hal bo'ldi» — bir xil narsa emas**. Xuddi shu qoida AmoCRM yoki OnlinePBX tokeni chiqib ketsa ham asqotadi.
