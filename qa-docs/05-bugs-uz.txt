@@ -501,7 +501,7 @@ Haqiqiy natija:
 Barcha raqamlar birga ko'rinadi. Summani o'qish va tekshirish qiyin.
 
 Ilova:
-Bug Photos/1.png
+Skrinshot Bug Photos papkasi bilan birga o'chirilgan.
 
 Qo'shimcha tekshiruv:
 1. Qiymat kiritilayotgan paytda va saqlangan Operator qayta ochilganda formatni tekshiring.
@@ -534,7 +534,7 @@ Haqiqiy natija:
 Kalendar ochiladi va maydonda kun, oy va yildan iborat to'liq sana saqlanadi.
 
 Ilova:
-Bug Photos/2.png
+Skrinshot Bug Photos papkasi bilan birga o'chirilgan.
 
 Qo'shimcha tekshiruv:
 1. 1 dan 31 gacha bo'lgan barcha ruxsat etilgan kunlarni saqlashni tekshiring.
@@ -567,7 +567,7 @@ Haqiqiy natija:
 «Выберите форму» bandi haqiqiy formalar bilan birga ro'yxatda ko'rinadi.
 
 Ilova:
-Bug Photos/3.png
+Skrinshot Bug Photos papkasi bilan birga o'chirilgan.
 
 Qo'shimcha tekshiruv:
 1. «Выберите форму» bandini tanlab ko'ring va sahifa qanday javob berishini tekshiring.
@@ -599,7 +599,7 @@ Haqiqiy natija:
 Qidiruv tugmasi va klaviatura bo'yicha yordamchi belgi yuqori panelda doim ko'rinadi.
 
 Ilova:
-Bug Photos/4.png
+Skrinshot Bug Photos papkasi bilan birga o'chirilgan.
 
 Qo'shimcha tekshiruv:
 1. Funksiya Super-admin uchun qolishi kerak yoki kerak emasligini aniqlashtiring.
@@ -631,7 +631,7 @@ Haqiqiy natija:
 Mikrofonga kirish xatosi haqida ingliz tilidagi texnik xabar chiqadi. Qo'ng'iroq boshlanmaydi.
 
 Ilova:
-Bug Photos/5.png
+Skrinshot Bug Photos papkasi bilan birga o'chirilgan.
 
 Qo'shimcha tekshiruv:
 1. Mikrofonga ruxsat berilgan va taqiqlangan holatlarni tekshiring.
@@ -665,7 +665,7 @@ Haqiqiy natija:
 Soat va daqiqalardan iborat vaqt tanlash ro'yxati ochiladi.
 
 Ilova:
-Bug Photos/6.png
+Skrinshot Bug Photos papkasi bilan birga o'chirilgan.
 
 Qo'shimcha tekshiruv:
 1. Tanlangan sanani saqlash va qayta ochishni tekshiring.
