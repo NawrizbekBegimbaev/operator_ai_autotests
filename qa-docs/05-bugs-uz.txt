@@ -1,0 +1,775 @@
+05. BAGLAR JURNALI — ADMIN (UI)
+================================
+
+MAQSAD
+Ilovani qo'lda tekshirishda topilgan baglar shu faylga yoziladi.
+
+LOYIHA QOIDASI
+Bagni faqat o'zimiz takrorlab ko'rgandan keyin kiritamiz. Hali tekshiruv bilan tasdiqlanmagan taxmin va savollar 03-questions-for-team.md fayliga yoziladi.
+
+YANGI BAGNI QANDAY KIRITISH KERAK
+1. Quyidagi shablondan nusxa oling.
+2. Uni «Baglar» bo'limining oxiriga qo'shing.
+3. Navbatdagi BUG-XXX raqamini bering.
+4. Barcha maydonlarni to'ldiring.
+5. Umumiy ro'yxatga yangi qator qo'shing.
+
+
+MUHIM OGOHLANTIRISH
+--------------------
+
+BUG-001 dan BUG-008 gacha bo'lgan baglar 23.07.2026 kuni production muhitida topilgan. Bu baglarni staging muhitida qayta tekshirish kerak.
+
+Oldingi tekshiruvlar paytida production muhitida test ma'lumotlari yaratilgan yoki o'zgartirilgan:
+- test ROPlar yaratilgan;
+- tariflar o'zgartirilgan;
+- foydalanuvchi deaktivatsiya qilingan.
+
+Ushbu test ma'lumotlarini topib o'chirish yoki avvalgi qiymatlarini qaytarish kerak.
+
+Endi quyidagi qoida amal qiladi:
+- staging — yaratish, tahrirlash, o'chirish, bagni takrorlash va avtotestlar uchun;
+- production — faqat sahifani ochib ko'rish uchun. Haqiqiy ma'lumotlarni o'zgartirish mumkin emas.
+
+
+MAYDONLAR IZOHI
+---------------
+
+Platforma:
+Bag qaysi brauzer va operatsion tizimda topilganini yozing.
+
+Ilova:
+Admin yoki Landing. Admin uchun rolni ham ko'rsating: Super-admin, ROP yoki Operator.
+
+Muhit:
+staging, test yoki local. Funksional tekshiruvlar production muhitida o'tkazilmaydi.
+
+Tavsif:
+Muammoning mazmunini bitta aniq jumla bilan yozing.
+
+Qadamlar:
+Bagni boshidan takrorlash mumkin bo'lgan raqamlangan amallarni yozing.
+
+Kutilgan natija:
+Ilova qanday ishlashi kerakligini yozing.
+
+Haqiqiy natija:
+Aslida nima sodir bo'lganini yozing.
+
+Ilova:
+Skrinshot, video yoki xatolik logining fayl nomi yoki havolasi.
+
+
+MUHIMLIK DARAJALARI
+-------------------
+
+P0 — avariya yoki relizni to'xtatadigan muammo: ommaviy ishlamaslik, ma'lumot yo'qolishi yoki maxfiy ma'lumot sizib chiqishi.
+P1 — asosiy ishni yoki xavfsizlikni bloklaydigan muammo.
+P2 — jiddiy muammo, lekin vaqtinchalik chetlab o'tish yo'li bo'lishi mumkin.
+P3 — kichik, vizual yoki kosmetik muammo.
+
+
+HOLATLAR
+--------
+
+🔴 Yangi
+🟡 Ishda
+🟢 Tuzatilgan
+✅ Tekshirilgan va yopilgan
+⚪ Bag emas yoki takrorlanmaydi
+
+
+ATAMALAR
+--------
+
+ROP — savdo bo'limi rahbari.
+staging — test stendi.
+production — haqiqiy foydalanuvchi va ma'lumotlar ishlaydigan jangovar tizim.
+
+
+UMUMIY RO'YXAT
+--------------
+
+BUG-001 | Parolni ko'rsatish tugmasi matn bilan chiqadi, ko'z ikonkasi bo'lishi kerak | Admin, kirish ekrani | P3 | Yangi
+BUG-002 | Kirish ekranida Super-adminning ishchi ma'lumotlari oldindan to'ldirilgan | Admin, kirish ekrani | P1 | Yangi
+BUG-003 | Maydonlardagi matn vertikal markazda emas, yuqoriga siqilgan | Admin, turli formalar | P3 | Yangi
+BUG-004 | «Telefon» maydoni harf va istalgan matnni qabul qiladi | Admin, «ROP yaratish» formasi | P2 | Yangi
+BUG-005 | Yangi parol kiritiladigan formalarda parolni ko'rsatish tugmasi yo'q | Admin, turli formalar | P3 | Yangi
+BUG-006 | ROP deaktivatsiya qilingandan keyin uning ochiq sessiyasi tugamaydi | Admin, avtorizatsiya | P2 | Yangi
+BUG-007 | Bitta telefon raqami bilan bir nechta ROP yaratish mumkin | Admin, ROP yaratish | P2 | Yangi
+BUG-008 | Tarif narxiga to'g'ri son kiritilganda «Invalid input» xatosi chiqqan | Admin, tariflar | P2 | Tuzatilgan, tekshiruv kutilmoqda
+BUG-009 | Gemini maxfiy kaliti xatolik paytida loglarga tushgan | Google Gemini integratsiyasi | P1 | Tuzatilgan, tekshiruv kutilmoqda
+BUG-010 | Ish haqi qiymati razryadlarga ajratilmaydi va o'qish qiyin | Admin, «Operator yaratish» formasi | P3 | Yangi
+BUG-011 | «Ish haqi kuni» maydonida oy kuni o'rniga to'liq sana tanlanadi | Admin, «Operator yaratish» formasi | P2 | Yangi
+BUG-012 | Formalar ro'yxatida «Выберите форму» xizmat bandini tanlash mumkin | Admin, «Forma maydonlari» bo'limi | P3 | Yangi
+BUG-013 | ROP interfeysida keraksiz global qidiruv tugmasi ko'rinadi | Admin, ROP | P3 | Yangi
+BUG-014 | Qo'ng'iroqni boshlashda texnik xatolik chiqadi va qo'ng'iroq boshlanmaydi | Operator interfeysi | P1 | Yangi
+BUG-015 | «Soatsiz kelishuv uchun qo'ng'iroq vaqti» maydonida sana o'rniga vaqt tanlanadi | Admin, qo'ng'iroq sozlamalari | P2 | Yangi
+BUG-016 | Operator ma'lumotlari o'zgartirilganda uning faol sessiyasi tugamaydi | Admin va Operator interfeysi | P2 | Yangi
+BUG-017 | Qo'ng'iroq vaqtida «Operator» maydonidan boshqa operatorni tanlash mumkin | Operator interfeysi | P2 | Yangi
+BUG-018 | Ish kunining boshlanish va tugash vaqti qo'ng'iroqlar navbatini cheklamaydi | Operator interfeysi | P2 | Yangi
+
+
+YANGI BAG UCHUN SHABLON
+-----------------------
+
+BUG-XXX. Qisqa nom
+
+Web | Admin — <rol yoki bo'lim> | staging | <muammoning qisqa va aniq tavsifi>
+
+Muhimlik:
+Holat: Yangi
+Sana:
+
+Tavsif:
+
+Qadamlar:
+1.
+2.
+3.
+
+Kutilgan natija:
+
+Haqiqiy natija:
+
+Ilova:
+
+Qo'shimcha tekshiruv:
+
+
+BAGLAR
+======
+
+
+BUG-001. Parolni ko'rsatish tugmasi ikonka o'rniga matn bilan chiqadi
+-------------------------------------------------------------------------------
+
+Web | Admin — kirish ekrani | production | «Parol» maydonidagi tugma ko'z ikonkasi o'rniga «показать» («ko'rsatish») matni bilan chiqadi.
+
+Muhimlik: P3, kosmetik muammo
+Holat: Yangi
+Sana: 23.07.2026
+
+Tavsif:
+Kirish sahifasidagi «Parol» maydonining o'ng tomonida parolni ko'rsatish va yashirish tugmasi bor. Hozir tugma «показать» («ko'rsatish») matni bilan ko'rinadi. Dizayn bo'yicha uning o'rnida ko'z ikonkasi bo'lishi kerak.
+
+Qadamlar:
+1. Admin kirish sahifasini oching.
+2. «Parol» maydonining o'ng tomoniga qarang.
+
+Kutilgan natija:
+Maydonning o'ng tomonida ko'z ikonkasi ko'rinadi. Tugma bosilganda parol ko'rsatiladi yoki yashiriladi va ikonka holati o'zgaradi.
+
+Haqiqiy natija:
+Ko'z ikonkasi o'rniga «показать» («ko'rsatish») matni ko'rinadi.
+
+Ilova:
+Снимок экрана — 2026-07-23 в 13.40.53.png
+
+Qo'shimcha tekshiruv:
+1. Tugmani parol kiritishdan oldin va keyin tekshiring.
+2. Rus va o'zbek interfeyslarini tekshiring.
+3. Shu ekrandagi oldindan to'ldirilgan kirish ma'lumotlari BUG-002 ga tegishli.
+
+
+BUG-002. Kirish ekrani Super-admin ma'lumotlari bilan oldindan to'ldirilgan
+--------------------------------------------------------------------------------
+
+Web | Admin — kirish ekrani | production | Sahifa ochilganda login va parol maydonlari Super-adminning ishchi ma'lumotlari bilan to'ldirilgan.
+
+Muhimlik: P1, xavfsizlik muammosi
+Holat: Yangi
+Sana: 23.07.2026
+
+Tavsif:
+Kirish formasi Super-adminning tayyor login va paroli bilan ochiladi. Bu namuna yoki yordamchi matn emas, haqiqiy ishchi ma'lumotlar. Sahifani ochgan odam login va parolni bilmasdan eng yuqori huquqlar bilan kirishga urinishi mumkin. Production muhitida bu kritik xavfsizlik muammosi.
+
+Qadamlar:
+1. Admin kirish sahifasini oching.
+2. Hech narsa kiritmasdan «Login» va «Parol» maydonlariga qarang.
+3. Faqat staging muhitida «Kirish» tugmasini bosing.
+
+Ogohlantirish:
+Production muhitida uchinchi qadam faqat mas'ul xodim ruxsati bilan bajariladi.
+
+Kutilgan natija:
+«Login» va «Parol» maydonlari bo'sh bo'ladi. Super-admin ma'lumotlari sahifada ko'rinmaydi va tashrif buyuruvchiga berilmaydi.
+
+Haqiqiy natija:
+Sahifa ochilishi bilan maydonlar ishchi ma'lumotlar bilan to'ldiriladi. Login va parolni mustaqil kiritmasdan Super-admin huquqlari bilan kirish mumkin.
+
+Ilova:
+Снимок экрана — 2026-07-23 в 13.44.10.png
+
+Qo'shimcha tekshiruv:
+1. Sahifa birinchi marta ochilganda va yangilanganda maydonlar bo'sh ekanini tekshiring.
+2. Staging va production muhitlarini tekshiring, lekin productionda kirishni bajarmang.
+3. Eski umumiy ma'lumotlar endi kirish bermasligini tekshiring.
+4. Shubhali kirishlar bor-yo'qligini kirish tarixidan tekshiring.
+
+
+BUG-003. Maydonlardagi matn yuqoriga siqilgan
+------------------------------------------------
+
+Web | Admin — turli formalar | production | Yordamchi va kiritilgan matn maydonning vertikal markazida emas, yuqori chetida ko'rinadi.
+
+Muhimlik: P3, kosmetik muammo
+Holat: Yangi
+Sana: 23.07.2026
+
+Tavsif:
+Kiritish maydonlari juda baland ko'rinadi, matn esa yuqori qismga siqilgan. Pastda ortiqcha bo'sh joy qoladi va formalar tartibsiz ko'rinadi. Muammo Adminning bir nechta bo'limida takrorlanadi.
+
+Tasdiqlangan joylar:
+1. «ROP yaratish» — Ism, Familiya, Telefon, Parol, Login, Kompaniya nomi va Tarif maydonlari.
+2. «Parolni tiklash» — «Yangi parol» va «Yangi parolni takrorlang» maydonlari.
+3. «AmoCRM ulash» — barcha kiritish maydonlari.
+
+Qadamlar:
+1. Super-admin yoki ROP sifatida kiring.
+2. Operatorlar ro'yxatini oching va istalgan foydalanuvchi uchun «Parolni tiklash»ni tanlang.
+3. «Yangi parol» va «Yangi parolni takrorlang» maydonlaridagi yordamchi matn holatiga qarang.
+
+Kutilgan natija:
+Yordamchi matn va kiritilgan qiymat maydonning vertikal markazida joylashadi. Maydon balandligi ichidagi matnga mos bo'ladi.
+
+Haqiqiy natija:
+Matn yuqori chetga siqilgan va pastda ortiqcha bo'sh joy qolgan.
+
+Ilova:
+Снимок экрана — 2026-07-23 в 13.46.22.png
+Снимок экрана — 2026-07-23 в 13.54.09.png
+
+Qo'shimcha tekshiruv:
+Tuzatishdan keyin «Tasdiqlangan joylar» ro'yxatidagi barcha formalarni tekshiring.
+
+
+BUG-004. «Telefon» maydoni harf va istalgan matnni qabul qiladi
+----------------------------------------------------------------
+
+Web | Admin — Super-admin, «ROP yaratish» formasi | production | «Telefon» maydoni harf va begona belgilarni qabul qiladi, raqam formati tekshirilmaydi.
+
+Muhimlik: P2, tizimga noto'g'ri ma'lumot saqlanishi mumkin
+Holat: Yangi
+Sana: 23.07.2026
+
+Tavsif:
+«ROP yaratish» formasidagi «Telefon» maydoni kiritilgan qiymatni tekshirmaydi. Foydalanuvchi harf yoki istalgan belgini kiritib, formani yuborishi mumkin. Natijada tizimda noto'g'ri telefon raqamlari saqlanishi mumkin.
+
+Qadamlar:
+1. Super-admin sifatida kiring va «ROP» bo'limini oching.
+2. «ROP yaratish» tugmasini bosing.
+3. «Telefon» maydoniga harf yoki istalgan matn kiriting.
+4. Qolgan majburiy maydonlarni to'g'ri to'ldirib, «Yaratish»ni bosing.
+
+Kutilgan natija:
+Maydon faqat tasdiqlangan formatdagi telefon raqamini qabul qiladi. Harf, noto'g'ri uzunlik yoki begona belgi kiritilganda tushunarli xabar chiqadi va ROP yaratilmaydi.
+
+Haqiqiy natija:
+Maydon har qanday bo'sh bo'lmagan matnni, jumladan harflarni ham qabul qiladi. Xatolik xabari chiqmaydi.
+
+Ilova:
+Снимок экрана — 2026-07-23 в 13.48.33.png
+
+Qo'shimcha tekshiruv:
+1. ROP yaratish va tahrirlashda «Telefon» maydonini tekshiring.
+2. Operator yaratish va tahrirlashni tekshiring.
+3. Bo'sh qiymat, juda qisqa va juda uzun raqam, harf va maxsus belgilarni tekshiring.
+4. Jamoa bilan ruxsat etilgan telefon formatini aniqlashtiring.
+
+
+BUG-005. Yangi parol maydonlarida parolni ko'rsatish tugmasi yo'q
+------------------------------------------------------------------
+
+Web | Admin — turli formalar | production | Yangi parol kiritiladigan maydonlarda ko'z ikonkasi yo'q va kiritilgan parolni tekshirib bo'lmaydi.
+
+Muhimlik: P3, foydalanish qulayligi
+Holat: Yangi
+Sana: 23.07.2026
+
+Tavsif:
+Parol maydonlari doim nuqtalar bilan yashirilgan va yonida ko'z ikonkasi yo'q. Super-admin yoki ROP saqlashdan va foydalanuvchiga berishdan oldin kiritilgan parolni tekshira olmaydi. Muammo yangi parol belgilanadigan barcha tekshirilgan formalarda takrorlanadi.
+
+Tasdiqlangan joylar:
+1. «ROP yaratish» — «Parol» maydoni.
+2. «Parolni tiklash» — «Yangi parol» va «Yangi parolni takrorlang» maydonlari.
+
+Qadamlar:
+1. Super-admin yoki ROP sifatida kiring.
+2. Istalgan foydalanuvchi uchun «Parolni tiklash»ni oching.
+3. Yangi parol va uning takrorini kiriting.
+4. Kiritilgan qiymatni ko'rishga urinib ko'ring.
+
+Kutilgan natija:
+Har bir parol maydonida kiritilgan qiymatni ko'rsatish va yana yashirish uchun ko'z ikonkasi bo'ladi.
+
+Haqiqiy natija:
+Ko'rsatish tugmasi yo'q. Parol doim nuqtalar bilan yashiriladi.
+
+Ilova:
+Снимок экрана — 2026-07-23 в 13.51.44.png
+Снимок экрана — 2026-07-23 в 13.56.56.png
+
+Qo'shimcha tekshiruv:
+1. «Tasdiqlangan joylar» ro'yxatidagi barcha formalarni tekshiring.
+2. Tugma parolni ko'rsatishi va yana yashirishi kerak.
+3. Tugma matn emas, ko'z ikonkasi bilan ko'rinishi kerak. BUG-001 ni hisobga oling.
+4. Integratsiyalarning maxfiy maydonlarida bunday tugma kerak yoki kerak emasligini alohida aniqlashtiring.
+
+
+BUG-006. ROP deaktivatsiya qilingandan keyin ochiq sessiya tugamaydi
+--------------------------------------------------------------------
+
+Web | Admin — kirish va foydalanuvchini deaktivatsiya qilish | production | ROP deaktivatsiya qilingandan keyin yangi kirish bloklanadi, lekin oldindan ochilgan sessiya yana taxminan 15 daqiqa ishlaydi.
+
+Muhimlik: P2, kirish nazorati muammosi
+Holat: Yangi
+Sana: 23.07.2026
+
+Tavsif:
+Deaktivatsiya darhol ta'sir qilmaydi. ROP deaktivatsiyadan keyin yangi kirishga urinsa, tizim to'g'ri ravishda kirishni taqiqlaydi. Ammo foydalanuvchi oldindan kirgan bo'lsa, uning ochiq sessiyasi ishlashda davom etadi. Sahifalar ochiladi va amallar bajariladi. Kirish faqat taxminan 15 daqiqadan keyin tugaydi.
+
+Bu xavfsizlik muammosi: kirishi yopilgan xodim yana bir muddat ma'lumotlarni ko'rishi va o'zgartirishi mumkin.
+
+Qadamlar:
+1. ROP sifatida tizimga kiring va sahifani ochiq qoldiring.
+2. Boshqa brauzer yoki oynada Super-admin sifatida kirib, shu ROPni deaktivatsiya qiling.
+3. ROPning ochiq sahifasiga qayting va ishlashda davom eting.
+
+Kutilgan natija:
+Deaktivatsiyadan keyin kirish darhol yoki bir necha soniya ichida tugaydi. Keyingi amalda foydalanuvchi tizimdan chiqariladi va ma'lumotlarni ko'ra yoki o'zgartira olmaydi.
+
+Haqiqiy natija:
+Deaktivatsiya qilingan ROP taxminan 15 daqiqagacha ochiq sessiyada ishlashda davom etadi.
+
+Ilova:
+Yo'q.
+
+Qo'shimcha tekshiruv:
+1. Holatni stagingning dolzarb versiyasida takrorlang.
+2. ROP kirishi darhol tugashini tekshiring.
+3. Xuddi shu holatni Operator uchun tekshiring.
+4. Sahifalar o'rtasida o'tish bilan birga ma'lumotni o'zgartiradigan amallarni ham tekshiring.
+5. Kirish darhol tugashi kerakmi yoki 15 daqiqagacha kechikish ruxsat etiladimi, jamoa bilan aniqlashtiring.
+
+
+BUG-007. Bitta telefon raqami bilan bir nechta ROP yaratish mumkin
+------------------------------------------------------------------
+
+Web | Admin — Super-admin, ROP yaratish | production | Tizim bir xil telefon raqami bilan bir nechta ROP yaratishga ruxsat beradi va ogohlantirish ko'rsatmaydi.
+
+Muhimlik: P2, ma'lumotlar yaxlitligi buzilishi mumkin
+Holat: Yangi
+Sana: 23.07.2026
+
+Tavsif:
+ROP yaratishda tizim telefon raqamini boshqa foydalanuvchi ishlatayotganini tekshirmaydi. Natijada bir raqam bilan ikki yoki undan ko'p ROP yaratish mumkin. Bu foydalanuvchini qidirishda va aloqa ma'lumotlari bilan ishlashda chalkashlik tug'diradi.
+
+Qadamlar:
+1. Super-admin sifatida kiring va «ROP» bo'limini oching.
+2. To'g'ri telefon raqami bilan ROP yarating.
+3. Boshqa login, lekin xuddi shu telefon raqami bilan ikkinchi ROP yarating.
+4. Yaratish natijasini tekshiring.
+
+Kutilgan natija:
+Agar telefon raqami unikal bo'lishi kerak bo'lsa, tizim «Telefon allaqachon ishlatilmoqda» degan tushunarli xabar ko'rsatadi va ikkinchi ROPni yaratmaydi.
+
+Haqiqiy natija:
+Ikkala ROP ham bir xil telefon raqami bilan ogohlantirishsiz yaratiladi.
+
+Ilova:
+Yo'q.
+
+Qo'shimcha tekshiruv:
+1. Telefon barcha foydalanuvchilar orasida yoki faqat ROPlar orasida unikal bo'lishi kerakligini aniqlashtiring.
+2. Probel bilan va probelsiz yozilgan bir xil raqamlar bir xil hisoblanishini aniqlashtiring.
+3. Operator yaratish va tahrirlashni tekshiring.
+4. Telefon formati tekshirilmaydigan BUG-004 bilan bog'liqligini hisobga oling.
+5. Agar talablarda takroriy telefonlarga ruxsat berilgan bo'lsa, bagni «Bag emas» holati bilan yoping.
+
+
+BUG-008. Tarif narxi to'g'ri sonlarni rad etgan va «Invalid input» xatosini ko'rsatgan
+---------------------------------------------------------------------------------------
+
+Web | Admin — Super-admin, «Tariflar» bo'limi | production | Tarifni tahrirlashda «Narx» maydoni to'g'ri sonni qabul qilmagan va tarifni saqlab bo'lmagan.
+
+Muhimlik: P2
+Holat: Tuzatilgan, stagingda tekshiruv kutilmoqda
+Sana: 23.07.2026
+
+Tavsif:
+Bag topilgan paytda «Narx» maydoni kiritilgan istalgan sonni rad etgan. Maydon ostida «Invalid input» xabari chiqqan va o'zgarishlarni saqlab bo'lmagan. Muammo oddiy narxda ham, «Kelishilgan» ma'nosini berishi kerak bo'lgan 0 qiymatida ham yuz bergan.
+
+27.07.2026 yangilanishi:
+Tuzatish kiritilgan. Maydonning joriy ishlovi kiritilgan qiymatni son sifatida qabul qiladi, jumladan 0 qiymatini ham. Bo'sh maydon alohida qayta ishlanadi. Bagni yopishdan oldin formani stagingda tekshirish kerak.
+
+Tuzatishni tekshirish qadamlari:
+1. Super-admin sifatida kiring va «Tariflar» bo'limini oching.
+2. Istalgan tarifni tahrirlashni oching.
+3. «Narx» maydoniga 412 kiriting va tarifni saqlang.
+4. Tarifni qayta ochib, saqlangan narxni tekshiring.
+5. 0 qiymatini kiriting va tarifni saqlang.
+6. Tarifni qayta ochib, narx «Kelishilgan» sifatida ko'rinishini tekshiring.
+
+Kutilgan natija:
+Son to'g'ri narx sifatida qabul qilinadi va tarif muvaffaqiyatli saqlanadi. 0 qiymati «Kelishilgan» sifatida saqlanadi.
+
+Bag topilgan paytdagi haqiqiy natija:
+Maydon ostida «Invalid input» xabari chiqadi, maydon qizil bo'ladi va «Saqlash» tugmasi faol emas.
+
+Qayta tekshirish natijasi:
+Staging interfeysi orqali tekshiruv hali bajarilmadi.
+
+Ilova:
+BUG - 008.png
+
+Qo'shimcha tekshiruv:
+1. Musbat butun sonni tekshiring.
+2. «Kelishilgan» bo'lishi kerak bo'lgan 0 qiymatini tekshiring.
+3. Bo'sh qiymat, manfiy son va juda katta sonni tekshiring.
+4. Operatorning «Ish haqi» kabi boshqa sonli maydonlarini tekshiring.
+
+
+BUG-009. Gemini maxfiy kaliti xatolik paytida loglarga tushgan
+----------------------------------------------------------------
+
+Server | Google Gemini orqali ma'lumotlarni qayta ishlash | staging / production | Tarmoq xatosida Gemini maxfiy kaliti to'liq holda loglarga tushgan.
+
+Muhimlik: P1, xavfsizlik muammosi
+Holat: 25.07.2026 kuni tuzatilgan, bizning tekshiruvimiz kutilmoqda
+Bag kiritilgan sana: 25.07.2026
+
+Tavsif:
+Gemini maxfiy kaliti sun'iy intellekt xizmatiga pullik murojaat qilish uchun ishlatiladi. Ilgari kalit so'rov manzilining bir qismi bo'lgan. Murojaat tarmoq xatosi bilan tugaganda tizim to'liq manzilni kalit bilan birga loglarga saqlagan.
+
+Loglarga kirishi bor xodim kalitni ko'rib, ruxsatsiz ishlatishi mumkin edi. Bu begona xarajatlar va oylik limit tugashiga olib kelishi mumkin.
+
+Tuzatishni tekshirish qadamlari:
+1. Stagingda Gemini ishlatadigan funksiyani ishga tushiring.
+2. Xavfsiz usulda tarmoq xatosini yuzaga keltiring.
+3. Tegishli log yozuvini oching.
+4. Maxfiy kalit so'rov manzilida ham, xatolik matnida ham ko'rinmasligini tekshiring.
+5. Muvaffaqiyatli murojaatni bajarib, integratsiya yangi kalit bilan ishlayotganini tekshiring.
+
+Kutilgan natija:
+Maxfiy kalit muvaffaqiyatli murojaatda ham, xatolikda ham loglarda ko'rinmaydi. Eski kalit o'chirilgan, yangi kalit barcha kerakli muhitlarda ishlaydi.
+
+Haqiqiy natija, bag topilgan paytda:
+Tarmoq xatosida kalit loglarda to'liq ko'ringan. Muammo topilgach ilova tuzatildi, eski kalit o'chirildi va 25.07.2026 kuni yangi kalit ulandi.
+
+Bajarilgan ishlar:
+1. Kalit endi so'rov manzilining ko'rinadigan qismida uzatilmaydi.
+2. Gemini bilan ishlaydigan barcha ma'lum funksiyalar tuzatildi.
+3. Eski kalit o'chirildi.
+4. Yangi kalit 25.07.2026 kuni ulandi.
+
+Yopishdan oldin tekshirilishi kerak:
+1. Stagingda TC-165 tekshiruvini bajaring.
+2. Tarmoq xatosida kalit loglarda chiqmasligini tekshiring.
+3. Kalit ochiq bo'lgan davrdagi xarajatlar tarixini tekshiring.
+4. Eski kalit saqlangan loglar, yozishmalar, skrinshotlar va zaxira nusxalarda qolmaganini tekshiring.
+
+Ilova:
+Kalit to'liq yashirilgan tarixiy log skrinshoti. Ochiq kalitni ilovaga yoki yozishmaga qo'shish mumkin emas.
+
+Qo'shimcha tekshiruv:
+Bag faqat TC-165 muvaffaqiyatli bajarilgach va xarajatlar tarixi ko'rilgach «Tekshirilgan» holatiga o'tkaziladi.
+
+
+BUG-010. Ish haqi qiymati razryadlarga ajratilmaydi
+----------------------------------------------------
+
+Web | Admin — ROP, «Operator yaratish» formasi | staging | «Ish haqi» maydonidagi katta qiymat raqam guruhlariga ajratilmaydi va o'qish qiyin.
+
+Muhimlik: P3, vizual muammo
+Holat: Yangi
+Sana: 27.07.2026
+
+Tavsif:
+«Ish haqi» maydonida katta sonlar bir-biriga qo'shilib ko'rinadi. Masalan, bir million 1000000 ko'rinishida chiqadi. Foydalanuvchi summani tez o'qishi va ortiqcha yoki yetishmayotgan raqamni payqashi qiyin.
+
+Qadamlar:
+1. ROP sifatida kiring.
+2. «Operator yaratish» formasini oching.
+3. «Ish haqi» maydoniga yetti yoki undan ko'p raqamli summa kiriting.
+4. Qiymat qanday ko'rinishiga qarang.
+
+Kutilgan natija:
+Son razryadlari probel bilan ajratiladi. Masalan, bir million 1 000 000 ko'rinishida chiqadi. Ko'rinishni formatlash summaning o'zini o'zgartirmaydi.
+
+Haqiqiy natija:
+Barcha raqamlar birga ko'rinadi. Summani o'qish va tekshirish qiyin.
+
+Ilova:
+Bug Photos/1.png
+
+Qo'shimcha tekshiruv:
+1. Qiymat kiritilayotgan paytda va saqlangan Operator qayta ochilganda formatni tekshiring.
+2. 1 000, 100 000, 1 000 000 va kattaroq summalarni tekshiring.
+3. Probeldan foydalanish qiymatni saqlashga xalaqit bermasligini tekshiring.
+
+
+BUG-011. «Ish haqi kuni» maydonida to'liq sana tanlanadi
+---------------------------------------------------------
+
+Web | Admin — ROP, «Operator yaratish» formasi | staging | Har oylik to'lov uchun oy kuni tanlanishi kerak, lekin maydon oy va yil bilan to'liq sanani saqlaydi.
+
+Muhimlik: P2, ish haqi kuni noto'g'ri belgilanishi mumkin
+Holat: Yangi
+Sana: 27.07.2026
+
+Tavsif:
+Maydon «День зарплаты» — «Ish haqi kuni» deb nomlangan. Shuning uchun foydalanuvchi har oy takrorlanadigan kunni, masalan 1 yoki 15 ni tanlashi kerak. Hozir kalendar ochiladi va 01.07.2026 kabi to'liq sana saqlanadi. Bunday qiymat faqat bitta oyga tegishli va har oylik to'lov qoidasini bildirmaydi.
+
+Qadamlar:
+1. ROP sifatida kiring.
+2. «Operator yaratish» formasini oching.
+3. «Ish haqi kuni» maydonini bosing.
+4. Qiymat tanlab, qanday formatda ko'rinishini tekshiring.
+
+Kutilgan natija:
+Foydalanuvchi faqat oy kunini — 1 dan 31 gacha bo'lgan sonni tanlaydi. Oy va yil ko'rsatilmaydi.
+
+Haqiqiy natija:
+Kalendar ochiladi va maydonda kun, oy va yildan iborat to'liq sana saqlanadi.
+
+Ilova:
+Bug Photos/2.png
+
+Qo'shimcha tekshiruv:
+1. 1 dan 31 gacha bo'lgan barcha ruxsat etilgan kunlarni saqlashni tekshiring.
+2. Qisqa oylarda 29, 30 va 31-kunlar bilan nima bo'lishini aniqlashtiring.
+3. Operator tahrirlanganda ish haqi kuni qanday ko'rinishini tekshiring.
+
+
+BUG-012. «Выберите форму» bandini ro'yxatdan tanlash mumkin
+-----------------------------------------------------------
+
+Web | Admin — ROP, «Forma maydonlari» bo'limi | staging | «Выберите форму» yordamchi matni haqiqiy formalar qatorida ko'rinadi va uni tanlash mumkin.
+
+Muhimlik: P3, interfeys xatosi
+Holat: Yangi
+Sana: 27.07.2026
+
+Tavsif:
+«Forma» ro'yxatida haqiqiy variantlar bilan birga «Выберите форму» — «Formani tanlang» bandi chiqadi. Bu forma nomi emas, yordamchi matn. Ro'yxat ochilganda u alohida tanlov sifatida ko'rinmasligi kerak.
+
+Qadamlar:
+1. ROP sifatida kiring.
+2. «Forma maydonlari» bo'limini oching.
+3. «Forma» ochiladigan ro'yxatini bosing.
+4. Mavjud variantlarga qarang.
+
+Kutilgan natija:
+Ro'yxatda faqat haqiqiy formalar ko'rinadi. «Выберите форму» matni tanlovdan oldingi yordamchi matn bo'lishi mumkin, lekin uni qiymat sifatida tanlab bo'lmaydi.
+
+Haqiqiy natija:
+«Выберите форму» bandi haqiqiy formalar bilan birga ro'yxatda ko'rinadi.
+
+Ilova:
+Bug Photos/3.png
+
+Qo'shimcha tekshiruv:
+1. «Выберите форму» bandini tanlab ko'ring va sahifa qanday javob berishini tekshiring.
+2. Sahifa yangilangandan keyin ro'yxatni tekshiring.
+3. Rus va o'zbek interfeyslarini tekshiring.
+
+
+BUG-013. ROP interfeysida keraksiz global qidiruv tugmasi ko'rinadi
+------------------------------------------------------------------
+
+Web | Admin — ROP, yuqori panel | staging | Yuqori panelda oddiy foydalanuvchilarga tushunarsiz bo'lgan global qidiruv tugmasi ko'rinadi.
+
+Muhimlik: P3, interfeys qulayligi
+Holat: Yangi
+Sana: 27.07.2026
+
+Tavsif:
+ROP yuqori panelida qidiruv tugmasi va klaviatura tugmalari bo'yicha yordamchi belgi ko'rinadi. Funksiya odatiy ish jarayonida kerak emas va foydalanuvchilarga tushunarsiz. Shu sababli interfeysda ortiqcha element paydo bo'ladi.
+
+Qadamlar:
+1. ROP sifatida kiring.
+2. Adminning istalgan sahifasini oching.
+3. Til tanlash tugmasi yonidagi yuqori panelga qarang.
+
+Kutilgan natija:
+Agar global qidiruv oddiy foydalanuvchining ish jarayonida ishlatilmasa, qidiruv tugmasi unga ko'rsatilmaydi.
+
+Haqiqiy natija:
+Qidiruv tugmasi va klaviatura bo'yicha yordamchi belgi yuqori panelda doim ko'rinadi.
+
+Ilova:
+Bug Photos/4.png
+
+Qo'shimcha tekshiruv:
+1. Funksiya Super-admin uchun qolishi kerak yoki kerak emasligini aniqlashtiring.
+2. ROP va Operatorning yuqori panelini tekshiring.
+
+
+BUG-014. Qo'ng'iroqni boshlashda texnik xatolik chiqadi
+--------------------------------------------------------
+
+Web | Operator interfeysi — qo'ng'iroqlar navbati | staging | «Hozir qo'ng'iroq qilish» tugmasi bosilganda texnik xatolik chiqadi va qo'ng'iroq boshlanmaydi.
+
+Muhimlik: P1, Operator asosiy ishini bajara olmaydi
+Holat: Yangi
+Sana: 27.07.2026
+
+Tavsif:
+Operator navbatdagi mijozni ochib, «Позвонить сейчас» — «Hozir qo'ng'iroq qilish» tugmasini bosadi. Qo'ng'iroq boshlanishi o'rniga ingliz tilidagi texnik xabar bilan qizil bildirishnoma chiqadi. Mijozga qo'ng'iroq bajarilmaydi.
+
+Qadamlar:
+1. Operator sifatida kiring.
+2. Qo'ng'iroqlar navbatini oching.
+3. Mavjud mijozni tanlang.
+4. «Hozir qo'ng'iroq qilish» tugmasini bosing.
+
+Kutilgan natija:
+Agar mikrofonga ruxsat hali berilmagan bo'lsa, brauzer tushunarli ruxsat so'rovini ko'rsatadi. Ruxsat berilgach qo'ng'iroq boshlanadi. Foydalanuvchi ichki texnik xabarni ko'rmaydi.
+
+Haqiqiy natija:
+Mikrofonga kirish xatosi haqida ingliz tilidagi texnik xabar chiqadi. Qo'ng'iroq boshlanmaydi.
+
+Ilova:
+Bug Photos/5.png
+
+Qo'shimcha tekshiruv:
+1. Mikrofonga ruxsat berilgan va taqiqlangan holatlarni tekshiring.
+2. Yandex Browser va Chrome brauzerlarini tekshiring.
+3. Birinchi va takroriy qo'ng'iroqni tekshiring.
+4. Qo'ng'iroq imkonsiz bo'lsa, Operator keyingi amallar yozilgan tushunarli xabar olishini tekshiring.
+
+
+BUG-015. «Soatsiz kelishuv uchun qo'ng'iroq vaqti» maydonida vaqt tanlanadi
+--------------------------------------------------------------------------------
+
+Web | Admin — ROP, qo'ng'iroq sozlamalari | staging | Vaqti ko'rsatilmagan kelishuv uchun sana tanlanishi kerak, lekin maydonda soat va daqiqa tanlanadi.
+
+Muhimlik: P2, qo'ng'iroq noto'g'ri rejalashtirilishi mumkin
+Holat: Yangi
+Sana: 27.07.2026
+
+Tavsif:
+«Soatsiz kelishuv uchun qo'ng'iroq vaqti» maydonida foydalanuvchi keyingi qo'ng'iroq sanasini ko'rsatishi kerak. Hozir maydon bosilganda soat va daqiqalar ro'yxati ochiladi. Kerakli kalendar kunini tanlab bo'lmaydi.
+
+Qadamlar:
+1. ROP sifatida kiring.
+2. Qo'ng'iroq sozlamalarini oching.
+3. «Soatsiz kelishuv uchun qo'ng'iroq vaqti» maydonini toping.
+4. Qiymat tanlash maydonini bosing.
+
+Kutilgan natija:
+Keyingi qo'ng'iroq sanasini tanlash mumkin bo'lgan kalendar ochiladi.
+
+Haqiqiy natija:
+Soat va daqiqalardan iborat vaqt tanlash ro'yxati ochiladi.
+
+Ilova:
+Bug Photos/6.png
+
+Qo'shimcha tekshiruv:
+1. Tanlangan sanani saqlash va qayta ochishni tekshiring.
+2. Sana Operator navbatida to'g'ri ko'rinishini tekshiring.
+3. Rus va o'zbek interfeyslarini tekshiring.
+
+
+BUG-016. Operator ma'lumotlari o'zgartirilganda faol sessiya tugamaydi
+----------------------------------------------------------------------
+
+Web | Admin va Operator interfeysi — foydalanuvchi ma'lumotlarini tahrirlash | staging | ROP tizimga kirgan Operatorning ma'lumotlarini o'zgartirganda Operator ochiq sessiyada ishlashda davom etadi.
+
+Muhimlik: P2, ochiq sessiya eskirgan ma'lumotlar bilan ishlashda davom etadi
+Holat: Yangi
+Sana: 27.07.2026
+
+Tavsif:
+Operator tizimga kiradi. Shundan keyin ROP uning ma'lumotlarini o'zgartirib saqlaydi. Operatorning ochiq sessiyasi tugamaydi. Foydalanuvchi ma'lumotlari o'zgargan bo'lsa ham, Operator qayta kirmasdan ishlashda davom etadi.
+
+Qadamlar:
+1. Operator sifatida tizimga kiring va sahifani ochiq qoldiring.
+2. Boshqa brauzer yoki oynada ROP sifatida kiring.
+3. Shu Operator ma'lumotlarini ochib, o'zgartiring va saqlang.
+4. Operatorning ochiq sessiyasiga qaytib, ishlashda davom eting.
+
+Kutilgan natija:
+O'zgarishlar saqlangandan keyin Operatorning faol sessiyasi tugaydi. Operator dolzarb ma'lumotlar bilan qayta kirishi kerak.
+
+Haqiqiy natija:
+Operator tizimda qoladi va qayta kirmasdan ishlashda davom etadi.
+
+Ilova:
+Yo'q.
+
+Qo'shimcha tekshiruv:
+1. Login, parol, ism, telefon va telefoniya sozlamalarini alohida o'zgartirib tekshiring.
+2. Sessiya darhol yoki faqat sahifa yangilangandan keyin tugashini tekshiring.
+3. Xuddi shu holatni ROP uchun tekshiring.
+4. Natijani BUG-006 dagi deaktivatsiya holati bilan solishtiring.
+
+
+BUG-017. Qo'ng'iroq vaqtida boshqa Operatorni tanlash mumkin
+-------------------------------------------------------------
+
+Web | Operator interfeysi — faol qo'ng'iroq formasi | staging | «Operator» maydoni joriy Operator bilan avtomatik to'ldirilishi kerak, lekin u ochiladigan ro'yxat bo'lib ko'rinadi.
+
+Muhimlik: P2, qo'ng'iroq boshqa xodim nomiga yozilishi mumkin
+Holat: Yangi
+Sana: 27.07.2026
+
+Tavsif:
+Qo'ng'iroq vaqtida Operator mijoz haqidagi maydonlarni to'ldiradi. «Operator» maydonidan ro'yxatdagi boshqa xodimni tanlash mumkin. Foydalanuvchi tasodifan yoki ataylab boshqa odamni ko'rsatishi mumkin. Natijada qo'ng'iroq tarixi va statistika noto'g'ri Operatorga bog'lanadi.
+
+Qadamlar:
+1. Operator sifatida kiring.
+2. Navbatdagi mijozga qo'ng'iroqni boshlang.
+3. Qo'ng'iroq formasidagi «Operator» maydonini oching.
+4. Mavjud qiymatlarga qarang va boshqa xodimni tanlashga urinib ko'ring.
+
+Kutilgan natija:
+Maydon tizimga kirgan Operator ismi bilan avtomatik to'ldiriladi va uni o'zgartirib bo'lmaydi.
+
+Haqiqiy natija:
+Maydon ochiladigan ro'yxat bo'lib ko'rinadi va boshqa Operatorni tanlashga ruxsat beradi.
+
+Ilova:
+Yo'q.
+
+Qo'shimcha tekshiruv:
+1. Saqlangan qo'ng'iroq natijasida tizimga kirgan Operator ko'rsatilganini tekshiring.
+2. Takroriy qo'ng'iroq va sahifa yangilangandan keyingi qo'ng'iroqni tekshiring.
+3. Operator hisobot va mijoz tarixida to'g'ri ko'rinishini tekshiring.
+
+
+BUG-018. Ish jadvali Operator navbati va qo'ng'iroqlarini cheklamaydi
+----------------------------------------------------------------------
+
+Web | Operator interfeysi — ish kuni va qo'ng'iroqlar navbati | staging | Ish kuni tugagandan keyin navbat ko'rinishda qoladi va Operator mijozlarga qo'ng'iroq qila oladi.
+
+Muhimlik: P2, ish vaqti cheklovlari qo'llanmaydi
+Holat: Yangi
+Sana: 27.07.2026
+
+Tavsif:
+Ish kunining boshlanish va tugash sozlamalari Operator ishini cheklamaydi. Belgilangan tugash vaqtidan keyin navbat ko'rinishda qoladi va qo'ng'iroq tugmasi faol bo'ladi. Operator belgilangan ish vaqtidan tashqari mijozlarga qo'ng'iroq qila oladi.
+
+Qadamlar:
+1. ROP sifatida kirib, Operator uchun ish kunining boshlanish va tugash vaqtini belgilang.
+2. Ish kuni tugashidan oldin Operator sifatida kiring.
+3. Tugash vaqtini kuting yoki uni yaqin vaqtga belgilang.
+4. Ish kuni tugagach navbatni tekshiring va qo'ng'iroqni boshlashga urinib ko'ring.
+
+Kutilgan natija:
+Ish kuni boshlanishidan oldin va tugagandan keyin navbat mavjud bo'lmaydi, qo'ng'iroqni boshlash mumkin emas. Operator ish kuni hali boshlanmagani yoki allaqachon tugagani haqida tushunarli xabar ko'radi.
+
+Haqiqiy natija:
+Ish kuni tugagandan keyin navbat ekranda qoladi va Operator mijozga qo'ng'iroqni boshlay oladi.
+
+Ilova:
+Yo'q.
+
+Qo'shimcha tekshiruv:
+1. Ish kuni boshlanishidan oldingi holatni tekshiring.
+2. Boshlanish va tugash chegaralarini, jumladan keyingi daqiqaga o'tishni tekshiring.
+3. Foydalanuvchi va server vaqt mintaqasini tekshiring.
+4. Ish kuni tugagach sahifani yangilash va qayta kirishni tekshiring.
+5. Cheklov avtomatik va qo'lda boshlanadigan qo'ng'iroqlarga bir xil qo'llanishini tekshiring.
