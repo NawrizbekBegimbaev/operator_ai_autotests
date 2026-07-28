@@ -1,0 +1,57 @@
+meta {
+  name: 03 — Войти как Super-admin
+  type: http
+  seq: 3
+  tags: [
+    bug-021
+    manual
+    security
+    staging
+  ]
+}
+
+post {
+  url: {{api_base_url}}/v1/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  content-type: application/json
+}
+
+body:json {
+  {
+    "username": "{{?Логин тестового Super-admin}}",
+    "password": "{{?Пароль тестового Super-admin}}"
+  }
+}
+
+script:pre-request {
+  if (!bru.getVar("api_base_url") || !bru.getVar("operator_id")) {
+    throw new Error("Сначала успешно выполните запросы 01 и 02.");
+  }
+}
+
+script:post-response {
+  if (
+    res.status === 200
+    && res.body
+    && typeof res.body.access_token === "string"
+    && res.body.access_token.length > 0
+  ) {
+    bru.setVar("superadmin_access_token", res.body.access_token);
+  }
+}
+
+tests {
+  test("Super-admin успешно вошёл", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property("access_token").that.is.a("string").and.not.empty;
+    expect(res.body).to.have.nested.property("user.role", "super_admin");
+  });
+}
+
+docs {
+  Учётные данные Super-admin запрашиваются интерактивно и не сохраняются.
+}

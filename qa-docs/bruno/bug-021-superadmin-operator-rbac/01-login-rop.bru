@@ -1,0 +1,58 @@
+meta {
+  name: 01 — Войти как тестовый РОП
+  type: http
+  seq: 1
+  tags: [
+    bug-021
+    manual
+    security
+    staging
+  ]
+}
+
+post {
+  url: {{?API base URL staging без завершающего слеша}}/v1/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  content-type: application/json
+}
+
+body:json {
+  {
+    "username": "{{?Логин тестового РОП}}",
+    "password": "{{?Пароль тестового РОП}}"
+  }
+}
+
+script:pre-request {
+  bru.deleteAllVars();
+}
+
+script:post-response {
+  if (
+    res.status === 200
+    && res.body
+    && typeof res.body.access_token === "string"
+    && res.body.access_token.length > 0
+  ) {
+    const responseUrl = new URL(res.getUrl());
+    bru.setVar("api_base_url", responseUrl.origin);
+    bru.setVar("rop_access_token", res.body.access_token);
+  }
+}
+
+tests {
+  test("РОП успешно вошёл", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property("access_token").that.is.a("string").and.not.empty;
+    expect(res.body).to.have.nested.property("user.role", "rop");
+  });
+}
+
+docs {
+  Первый запрос очищает старые runtime-переменные и запрашивает URL и
+  учётные данные интерактивно. Значения не сохраняются в коллекции.
+}

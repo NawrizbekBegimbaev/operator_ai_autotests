@@ -1,0 +1,50 @@
+meta {
+  name: 04 — Получить оператора до PATCH
+  type: http
+  seq: 4
+  tags: [
+    bug-021
+    manual
+    security
+    staging
+  ]
+}
+
+get {
+  url: {{api_base_url}}/v1/users/{{operator_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{superadmin_access_token}}
+}
+
+script:pre-request {
+  if (!bru.getVar("superadmin_access_token") || !bru.getVar("operator_id")) {
+    throw new Error("Сначала успешно выполните запросы 01–03.");
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body) {
+    bru.setVar("operator_before_json", JSON.stringify(res.body));
+  }
+}
+
+tests {
+  test("Super-admin может прочитать временного оператора", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property("id", bru.getVar("operator_id"));
+    expect(res.body).to.have.property("username", bru.getVar("operator_username"));
+    expect(res.body).to.have.property(
+      "first_name",
+      bru.getVar("operator_first_name_before")
+    );
+  });
+}
+
+docs {
+  Это разрешённое чтение. Полный ответ сохраняется только в памяти Bruno,
+  чтобы запрос 06 смог сравнить запись до и после запрещённого PATCH.
+}

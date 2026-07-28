@@ -1,0 +1,83 @@
+meta {
+  name: 02 — Создать временного оператора под РОП
+  type: http
+  seq: 2
+  tags: [
+    bug-021
+    manual
+    security
+    staging
+  ]
+}
+
+post {
+  url: {{api_base_url}}/v1/operators
+  body: json
+  auth: none
+}
+
+headers {
+  content-type: application/json
+  Authorization: Bearer {{rop_access_token}}
+}
+
+body:json {
+  {
+    "username": "{{operator_username}}",
+    "password": "{{operator_password}}",
+    "first_name": "{{operator_first_name_before}}",
+    "last_name": "BUG-021",
+    "phone": "{{operator_phone}}",
+    "pbx_extension": "{{operator_pbx_extension}}",
+    "salary": 1,
+    "salary_day": "{{operator_salary_day}}"
+  }
+}
+
+script:pre-request {
+  if (!bru.getVar("api_base_url") || !bru.getVar("rop_access_token")) {
+    throw new Error("Сначала выполните запрос 01 — Войти как тестовый РОП.");
+  }
+
+  const uniquePart = (
+    Date.now().toString(36)
+    + Math.random().toString(36).slice(2, 8)
+  ).toUpperCase();
+  const phoneSuffix = String(
+    Math.floor(1000000 + Math.random() * 9000000)
+  );
+
+  bru.setVar("operator_username", `AT-BRU-${uniquePart}`);
+  bru.setVar("operator_password", `AT!${uniquePart}x9`);
+  bru.setVar("operator_first_name_before", `AT-BRU-BEFORE-${uniquePart.slice(-6)}`);
+  bru.setVar("operator_first_name_after", `AT-BRU-AFTER-${uniquePart.slice(-6)}`);
+  bru.setVar("operator_phone", `+99890${phoneSuffix}`);
+  bru.setVar("operator_pbx_extension", `AT${uniquePart.slice(-6)}`);
+  bru.setVar("operator_salary_day", new Date().toISOString().slice(0, 10));
+}
+
+script:post-response {
+  if (
+    res.status === 200
+    && res.body
+    && typeof res.body.id === "string"
+    && res.body.id.length > 0
+  ) {
+    bru.setVar("operator_id", res.body.id);
+    bru.setVar("operator_created_json", JSON.stringify(res.body));
+  }
+}
+
+tests {
+  test("Временный оператор создан под РОП", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property("id").that.is.a("string").and.not.empty;
+    expect(res.body).to.have.property("username", bru.getVar("operator_username"));
+    expect(res.body).to.have.property("role", "operator");
+  });
+}
+
+docs {
+  Создаётся только временная запись с префиксом AT-BRU-. Её ID сохраняется
+  в runtime-переменной Bruno для следующих запросов и удаления.
+}

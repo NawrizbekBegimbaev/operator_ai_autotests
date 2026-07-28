@@ -1,0 +1,58 @@
+meta {
+  name: 07 — Удалить временного оператора
+  type: http
+  seq: 7
+  tags: [
+    bug-021
+    cleanup
+    manual
+    security
+    staging
+  ]
+}
+
+delete {
+  url: {{api_base_url}}/v1/users/{{operator_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{rop_access_token}}
+}
+
+script:pre-request {
+  if (!bru.getVar("rop_access_token") || !bru.getVar("operator_id")) {
+    throw new Error(
+      "Нет данных для удаления. Проверьте, был ли оператор создан запросом 02."
+    );
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    bru.deleteVar("operator_id");
+    bru.deleteVar("operator_created_json");
+    bru.deleteVar("operator_before_json");
+    bru.deleteVar("operator_username");
+    bru.deleteVar("operator_password");
+    bru.deleteVar("operator_first_name_before");
+    bru.deleteVar("operator_first_name_after");
+    bru.deleteVar("operator_phone");
+    bru.deleteVar("operator_pbx_extension");
+    bru.deleteVar("operator_salary_day");
+    bru.deleteVar("patch_status");
+  }
+}
+
+tests {
+  test("Временный оператор удалён", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property("message", "o'chirildi");
+  });
+}
+
+docs {
+  Обязательная очистка тестовых данных. Запрос выполняется с токеном РОП,
+  которому принадлежит временный оператор.
+}

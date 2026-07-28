@@ -1,0 +1,54 @@
+meta {
+  name: 06 — Проверить оператора после PATCH
+  type: http
+  seq: 6
+  tags: [
+    bug-021
+    manual
+    security
+    staging
+  ]
+}
+
+get {
+  url: {{api_base_url}}/v1/users/{{operator_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{superadmin_access_token}}
+}
+
+script:pre-request {
+  if (
+    !bru.getVar("superadmin_access_token")
+    || !bru.getVar("operator_id")
+    || !bru.getVar("operator_before_json")
+    || !bru.getVar("patch_status")
+  ) {
+    throw new Error("Сначала выполните запросы 01–05.");
+  }
+}
+
+tests {
+  test("Повторное чтение оператора успешно", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property("id", bru.getVar("operator_id"));
+  });
+
+  test("Запись оператора полностью осталась без изменений", function() {
+    const operatorBefore = JSON.parse(bru.getVar("operator_before_json"));
+    expect(
+      res.body,
+      "Изменённая запись подтверждает BUG-021"
+    ).to.deep.equal(operatorBefore);
+  });
+}
+
+docs {
+  РЕШАЮЩАЯ ПРОВЕРКА ДАННЫХ.
+
+  Если first_name начинается с AT-BRU-AFTER-, изменение сохранилось и
+  BUG-021 воспроизведён. После просмотра результата выполните запрос 07.
+}

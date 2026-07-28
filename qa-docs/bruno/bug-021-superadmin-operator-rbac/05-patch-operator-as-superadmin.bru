@@ -1,0 +1,66 @@
+meta {
+  name: 05 — Попытаться изменить оператора как Super-admin
+  type: http
+  seq: 5
+  tags: [
+    bug-021
+    manual
+    security
+    staging
+  ]
+}
+
+patch {
+  url: {{api_base_url}}/v1/users/{{operator_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  content-type: application/json
+  Authorization: Bearer {{superadmin_access_token}}
+}
+
+body:json {
+  {
+    "first_name": "{{operator_first_name_after}}"
+  }
+}
+
+script:pre-request {
+  if (
+    !bru.getVar("superadmin_access_token")
+    || !bru.getVar("operator_id")
+    || !bru.getVar("operator_before_json")
+  ) {
+    throw new Error("Сначала успешно выполните запросы 01–04.");
+  }
+}
+
+script:post-response {
+  bru.setVar("patch_status", String(res.status));
+}
+
+tests {
+  test("Super-admin получает запрет HTTP 403", function() {
+    expect(
+      res.status,
+      "HTTP 200 означает, что BUG-021 воспроизведён"
+    ).to.equal(403);
+  });
+
+  if (res.status === 403) {
+    test("Ответ содержит корректное описание запрета", function() {
+      expect(res.body).to.have.property("status", 403);
+      expect(res.body).to.have.property("title", "Forbidden");
+      expect(res.body).to.have.property("detail", "ruxsat yo'q");
+    });
+  }
+}
+
+docs {
+  РЕШАЮЩИЙ ЗАПРОС.
+
+  Ожидается HTTP 403. HTTP 200 и красный тест означают воспроизведение
+  BUG-021. Даже при красном тесте обязательно продолжите запросами 06 и 07.
+}

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Operator AI — проверка BUG-021",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
