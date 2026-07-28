@@ -6,7 +6,7 @@ from playwright.sync_api import Page
 
 
 class LoginPage:
-    SIGN_IN_PATH = "auth/jwt/sign-in"
+    SIGN_IN_PATH = "/auth/jwt/sign-in"
 
     def __init__(self, page: Page) -> None:
         self.page = page

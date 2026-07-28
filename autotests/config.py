@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
 
 from dotenv import load_dotenv
 
@@ -50,12 +50,15 @@ class Settings:
                 f"({allowed}); получено: {target_env!r}."
             )
 
-        web_base_url = values["OPERATOR_AI_WEB_BASE_URL"].rstrip("/")
-        parsed_url = urlsplit(web_base_url)
+        configured_web_url = values["OPERATOR_AI_WEB_BASE_URL"]
+        parsed_url = urlsplit(configured_web_url)
         if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
             raise ConfigurationError(
                 "OPERATOR_AI_WEB_BASE_URL должен быть абсолютным HTTP(S)-адресом."
             )
+        web_base_url = urlunsplit(
+            (parsed_url.scheme, parsed_url.netloc, "", "", "")
+        ).rstrip("/")
 
         return cls(
             target_env=target_env,
