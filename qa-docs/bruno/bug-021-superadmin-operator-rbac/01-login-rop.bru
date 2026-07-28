@@ -38,8 +38,20 @@ script:post-response {
     && typeof res.body.access_token === "string"
     && res.body.access_token.length > 0
   ) {
-    const responseUrl = new URL(res.getUrl());
-    bru.setVar("api_base_url", responseUrl.origin);
+    const responseUrl = res.getUrl();
+    const loginPath = "/v1/auth/login";
+    const loginPathIndex = responseUrl.indexOf(loginPath);
+
+    if (loginPathIndex < 0) {
+      throw new Error(
+        "Не удалось определить API base URL из адреса ответа входа."
+      );
+    }
+
+    bru.setVar(
+      "api_base_url",
+      responseUrl.slice(0, loginPathIndex).replace(/\/+$/, "")
+    );
     bru.setVar("rop_access_token", res.body.access_token);
   }
 }
