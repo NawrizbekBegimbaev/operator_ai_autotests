@@ -28,19 +28,32 @@ class RoleLoginCase:
 
 
 ROLE_LOGIN_CASES = (
-    RoleLoginCase(
-        case_id="TC-002",
-        role="rop",
-        expected_path="/dashboard/dynamic-form",
-        page_factory=RopRulesPage,
-        content_description="раздел «Правила» с заголовком «Статусы лида»",
+    pytest.param(
+        RoleLoginCase(
+            case_id="TC-002",
+            role="rop",
+            expected_path="/dashboard/dynamic-form",
+            page_factory=RopRulesPage,
+            content_description="раздел «Правила» с заголовком «Статусы лида»",
+        ),
+        id="TC-002",
     ),
-    RoleLoginCase(
-        case_id="TC-003",
-        role="operator",
-        expected_path="/dashboard/calls",
-        page_factory=OperatorCallsPage,
-        content_description="таблицу лидов в разделе «Звонки»",
+    pytest.param(
+        RoleLoginCase(
+            case_id="TC-003",
+            role="operator",
+            expected_path="/dashboard/calls",
+            page_factory=OperatorCallsPage,
+            content_description="таблицу лидов в разделе «Звонки»",
+        ),
+        id="TC-003",
+        marks=pytest.mark.xfail(
+            reason=(
+                "BUG-019: staging после входа оператора открывает "
+                "/dashboard/home вместо /dashboard/calls"
+            ),
+            strict=True,
+        ),
     ),
 )
 
@@ -52,13 +65,13 @@ ROLE_LOGIN_CASES = (
 @pytest.mark.parametrize(
     "login_case",
     ROLE_LOGIN_CASES,
-    ids=["TC-002", "TC-003"],
 )
 def test_role_login_lands_on_expected_page(
     clean_login_page: Page,
     test_settings: Settings,
     login_case: RoleLoginCase,
 ) -> None:
+    """TC-002: РОП попадает в «Правила»; TC-003: оператор — в «Звонки»."""
     credentials = test_settings.credentials_for(login_case.role)
     login_page = LoginPage(clean_login_page)
     target_page = login_case.page_factory(clean_login_page)
