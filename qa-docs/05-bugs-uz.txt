@@ -108,7 +108,7 @@ BUG-015 | «Soatsiz kelishuv uchun qo'ng'iroq vaqti» maydonida sana o'rniga vaq
 BUG-016 | Operator ma'lumotlari o'zgartirilganda uning faol sessiyasi tugamaydi | Admin va Operator interfeysi | P2 | Yangi
 BUG-017 | Qo'ng'iroq vaqtida «Operator» maydonidan boshqa operatorni tanlash mumkin | Operator interfeysi | P2 | Yangi
 BUG-018 | Ish kunining boshlanish va tugash vaqti qo'ng'iroqlar navbatini cheklamaydi | Operator interfeysi | P2 | Yangi
-BUG-019 | Kirgandan keyin Operator «Qo'ng'iroqlar» o'rniga «Ish stoli»ga o'tadi | Admin, Operator kirishi | P2 | Yangi
+BUG-019 | Kirgandan keyin Operator «Qo'ng'iroqlar» o'rniga «Ish stoli»ga o'tadi | Admin, Operator kirishi | P2 | Bag emas
 
 
 YANGI BAG UCHUN SHABLON
@@ -781,12 +781,15 @@ BUG-019. Kirgandan keyin Operator «Qo'ng'iroqlar» o'rniga «Ish stoli»ga o'ta
 
 Web | Admin — Operator kirishi | staging | Muvaffaqiyatli avtorizatsiyadan keyin Operator `/dashboard/calls` o'rniga `/dashboard/home` sahifasiga yo'naltiriladi.
 
-Muhimlik: P2, boshlang'ich bo'lim noto'g'ri, lekin menyu orqali o'tish mumkin
-Holat: Yangi
+Muhimlik: P2
+Holat: Bag emas
 Sana: 28.07.2026
 
+28.07.2026 kungi tahlil natijasi:
+`/dashboard/home` sahifasiga o'tish mahsulot egasi tomonidan to'g'ri xatti-harakat sifatida tasdiqlandi. Tafovut ilova nuqsoni emas, TC-003 dagi eskirgan kutilgan natija sababli yuzaga kelgan. TC-003 va uning avtotesti «haqiqiy xatti-harakat bo'yicha aniqlashtirildi, 28.07.2026» belgisi bilan birga yangilandi; `xfail` olib tashlandi.
+
 Tavsif:
-TC-003 va frontendning joriy mantig'iga ko'ra Operatorning boshlang'ich sahifasi «Qo'ng'iroqlar» bo'limi bo'lishi kerak. Stagingda login va parol qabul qilinadi, avtorizatsiya muvaffaqiyatli tugaydi, lekin «Ish stoli» ochiladi. Operator asosiy ish bo'limiga chap menyu orqali qo'shimcha o'tishi kerak.
+Dastlabki tekshiruvda TC-003 va frontendning lokal mantig'i «Qo'ng'iroqlar» bo'limini Operatorning boshlang'ich sahifasi sifatida ko'rsatgan. Stagingda login va parol qabul qilingan, avtorizatsiya muvaffaqiyatli tugagan, lekin «Ish stoli» ochilgan. Talab aniqlashtirilgandan keyin bu xatti-harakat to'g'ri deb topildi.
 
 Qadamlar:
 1. Faol sessiyasiz staging Admin kirish sahifasini oching.
@@ -794,16 +797,18 @@ Qadamlar:
 3. «Kirish» tugmasini bosing.
 4. Ochilgan sahifaning manzili va tarkibini tekshiring.
 
-Kutilgan natija:
+Avvalgi kutilgan natija:
 `/dashboard/calls` ochiladi: «Qo'ng'iroqlar» bo'limidagi lidlar jadvali va Operator menyusi ko'rinadi.
 
 Haqiqiy natija:
 `/dashboard/home` ochiladi: Operatorning «Ish stoli» ko'rinadi. Avtorizatsiya muvaffaqiyatli, Operator menyusi mavjud.
 
+28.07.2026 kuni aniqlashtirilgan to'g'ri natija:
+Muvaffaqiyatli kirgandan keyin Operator `/dashboard/home` sahifasiga o'tadi. Sahifada «So'nggi qo'ng'iroqlar» bo'limi, «Qo'ng'iroqni boshlash» tugmasi va Operator menyusi ko'rinadi.
+
 Ilova:
 TC-003 yiqilganda Playwright screenshot va trace fayllarini lokal `test-results` papkasida saqladi. Test ma'lumotlari bo'lishi mumkinligi sababli ular Gitga qo'shilmadi.
 
 Qo'shimcha tekshiruv:
-1. Stagingdagi frontend versiyasini tekshiring: joriy koddagi `getDefaultDashboardPath` Operator uchun `/dashboard/calls` qaytaradi.
-2. Tuzatilgandan keyin TC-003 ni takrorlang va `strict=True` bilan XPASS olingandan keyingina `xfail` belgisini olib tashlang.
-3. ROP va Super-adminning boshlang'ich sahifalarini tekshiring.
+1. `getDefaultDashboardPath` ni tasdiqlangan `/dashboard/home` boshlang'ich manzili bilan sinxronlang.
+2. ROP va Super-adminning boshlang'ich sahifalarini tekshiring.

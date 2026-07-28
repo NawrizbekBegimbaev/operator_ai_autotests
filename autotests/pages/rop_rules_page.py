@@ -10,6 +10,9 @@ class RopRulesPage:
             name="Статусы лида",
             exact=True,
         )
+        self.content_elements = {
+            "заголовок «Статусы лида»": self.main_content,
+        }
         self.menu_links = {
             name: page.get_by_role("link", name=name, exact=True)
             for name in (
