@@ -109,6 +109,7 @@ BUG-016 | Operator ma'lumotlari o'zgartirilganda uning faol sessiyasi tugamaydi 
 BUG-017 | Qo'ng'iroq vaqtida «Operator» maydonidan boshqa operatorni tanlash mumkin | Operator interfeysi | P2 | Yangi
 BUG-018 | Ish kunining boshlanish va tugash vaqti qo'ng'iroqlar navbatini cheklamaydi | Operator interfeysi | P2 | Yangi
 BUG-019 | Kirgandan keyin Operator «Qo'ng'iroqlar» o'rniga «Ish stoli»ga o'tadi | Admin, Operator kirishi | P2 | Bag emas
+BUG-020 | Kirish formasi 6–7 belgili parolni yuboradi, API esa kamida 8 belgi talab qiladi | Admin, kirish ekrani | P2 | Yangi
 
 
 YANGI BAG UCHUN SHABLON
@@ -812,3 +813,39 @@ TC-003 yiqilganda Playwright screenshot va trace fayllarini lokal `test-results`
 Qo'shimcha tekshiruv:
 1. `getDefaultDashboardPath` ni tasdiqlangan `/dashboard/home` boshlang'ich manzili bilan sinxronlang.
 2. ROP va Super-adminning boshlang'ich sahifalarini tekshiring.
+
+
+BUG-020. Kirish formasi va API parolning turli minimal uzunligini ishlatadi
+-----------------------------------------------------------------------------
+
+Web | Admin — kirish ekrani | staging | Forma 6 yoki 7 belgili parolni yuborishga ruxsat beradi, lekin kirish API si kamida 8 belgi talab qiladi va `validation failed` texnik xabarini qaytaradi.
+
+Muhimlik: P2, avtorizatsiya shartnomasi sinxron emas
+Holat: Yangi
+Sana: 28.07.2026
+
+Tavsif:
+TC-007 bo'yicha kirish parolining minimal uzunligi 6 belgi: 5 belgi mijoz validatsiyasi bilan bloklanishi, 6 belgi esa oddiy kirish urinishi sifatida yuborilishi kerak. Forma aynan shunday ishlaydi. Ammo joriy backend kodidagi `POST /v1/auth/login` shartnomasida `minLength:"8"` ko'rsatilgan. Shu sababli 6 belgili parol foydalanuvchi ma'lumotlari tekshirilishidan oldin rad etiladi va universal kirish xatosi o'rniga inglizcha texnik xabar ko'rsatiladi.
+
+Qadamlar:
+1. Faol sessiyasiz staging Admin kirish sahifasini oching.
+2. Istalgan mavjud bo'lmagan loginni kiriting.
+3. `12345` parolini kiriting va «Kirish» tugmasini bosing.
+4. So'rov yuborilmaganini va «Пароль должен содержать не менее 6 символов!» xabari ko'rsatilganini tekshiring.
+5. Parolni `123456` ga o'zgartirib, yana «Kirish» tugmasini bosing.
+6. Ko'rsatilgan xabarni tekshiring.
+
+Kutilgan natija:
+6 belgi uchun mijoz validatsiyasi yo'qoladi, bitta kirish so'rovi yuboriladi va noto'g'ri ma'lumotlar uchun `login yoki parol noto'g'ri` universal xabari chiqadi.
+
+Haqiqiy natija:
+So'rov yuboriladi, lekin API parolni kamida 8 belgi bo'lishi kerakligi sababli rad etadi. Qizil xabarda `validation failed` ko'rsatiladi.
+
+Ilova:
+TC-007 uchun diagnostik pytest chiqishi; Playwright screenshot va trace fayllarini faqat yiqilishda yaratadi.
+
+Qo'shimcha tekshiruv:
+1. Kirish formasi va API uchun parolning yagona minimal uzunligini kelishib oling.
+2. UI va API da 5, 6, 7 va 8 belgili chegaralarni tekshiring.
+3. 6–7 belgili paroli bor foydalanuvchilar kira olishini yoki lokalizatsiya qilingan ko'rsatma olishini tekshiring.
+4. Tuzatilgandan keyin TC-007 ni takrorlang va `strict=True` bilan XPASS bo'lgandan keyingina `xfail` belgisini olib tashlang.

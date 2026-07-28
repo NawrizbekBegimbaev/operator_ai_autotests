@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import pytest
-from playwright.sync_api import Page, Request, expect
+from playwright.sync_api import Page, expect
 
 from autotests.config import Settings
 from autotests.pages.login_page import LoginPage
+from autotests.support.network import track_requests
 
 
 @pytest.mark.web
@@ -24,13 +25,11 @@ def test_tc_006_empty_fields_show_validation_without_login_request(
     входа; запрос POST /v1/auth/login не отправляется.
     """
     login_page = LoginPage(clean_login_page)
-    login_requests: list[Request] = []
-
-    def record_login_request(request: Request) -> None:
-        if request.method == "POST" and request.url.endswith("/v1/auth/login"):
-            login_requests.append(request)
-
-    clean_login_page.on("request", record_login_request)
+    login_requests = track_requests(
+        clean_login_page,
+        method="POST",
+        url_suffix="/v1/auth/login",
+    )
     login_page.open(test_settings.web_base_url)
     login_page.submit()
 
