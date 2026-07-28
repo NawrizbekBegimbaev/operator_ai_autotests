@@ -17,7 +17,7 @@ AuthorizedPageFactory = Callable[[str], Page]
 class CrossRoleDirectUrlCase:
     case_id: str
     role: str
-    route_path: str
+    route_paths: tuple[str, ...]
 
 
 def _cross_role_param(
@@ -25,24 +25,23 @@ def _cross_role_param(
     case_id: str,
     role: str,
     role_label: str,
-    route_path: str,
+    route_paths: tuple[str, ...],
     redirect_path: str,
 ) -> object:
-    route_id = route_path.rsplit("/", maxsplit=1)[-1]
     return pytest.param(
         CrossRoleDirectUrlCase(
             case_id=case_id,
             role=role,
-            route_path=route_path,
+            route_paths=route_paths,
         ),
         marks=pytest.mark.xfail(
             reason=(
-                f"BUG-021: вместо заглушки доступа {role_label} "
-                f"с {route_path} перенаправляется на {redirect_path}"
+                f"BUG-021: вместо заглушек доступа {role_label} "
+                f"перенаправляется на {redirect_path}"
             ),
             strict=True,
         ),
-        id=f"{case_id}-{route_id}",
+        id=case_id,
     )
 
 
@@ -51,77 +50,35 @@ CROSS_ROLE_DIRECT_URL_CASES = (
         case_id="TC-027",
         role="rop",
         role_label="РОП",
-        route_path="/dashboard/calling",
-        redirect_path="/dashboard/dynamic-form",
-    ),
-    _cross_role_param(
-        case_id="TC-027",
-        role="rop",
-        role_label="РОП",
-        route_path="/dashboard/work",
-        redirect_path="/dashboard/dynamic-form",
-    ),
-    _cross_role_param(
-        case_id="TC-027",
-        role="rop",
-        role_label="РОП",
-        route_path="/dashboard/home",
+        route_paths=(
+            "/dashboard/calling",
+            "/dashboard/work",
+            "/dashboard/home",
+        ),
         redirect_path="/dashboard/dynamic-form",
     ),
     _cross_role_param(
         case_id="TC-028",
         role="superadmin",
         role_label="супер-админ",
-        route_path="/dashboard/dynamic-form",
-        redirect_path="/dashboard/rop",
-    ),
-    _cross_role_param(
-        case_id="TC-028",
-        role="superadmin",
-        role_label="супер-админ",
-        route_path="/dashboard/mezonlar",
-        redirect_path="/dashboard/rop",
-    ),
-    _cross_role_param(
-        case_id="TC-028",
-        role="superadmin",
-        role_label="супер-админ",
-        route_path="/dashboard/operator-pipelines",
-        redirect_path="/dashboard/rop",
-    ),
-    _cross_role_param(
-        case_id="TC-028",
-        role="superadmin",
-        role_label="супер-админ",
-        route_path="/dashboard/attendance",
+        route_paths=(
+            "/dashboard/dynamic-form",
+            "/dashboard/mezonlar",
+            "/dashboard/operator-pipelines",
+            "/dashboard/attendance",
+        ),
         redirect_path="/dashboard/rop",
     ),
     _cross_role_param(
         case_id="TC-029",
         role="superadmin",
         role_label="супер-админ",
-        route_path="/dashboard/calling",
-        redirect_path="/dashboard/rop",
-    ),
-    _cross_role_param(
-        case_id="TC-029",
-        role="superadmin",
-        role_label="супер-админ",
-        route_path="/dashboard/calls",
-        redirect_path="/dashboard/rop",
-    ),
-    _cross_role_param(
-        case_id="TC-029",
-        role="superadmin",
-        role_label="супер-админ",
-        route_path="/dashboard/work",
-        redirect_path="/dashboard/rop",
-    ),
-    _cross_role_param(
-        case_id="TC-029",
-        role="superadmin",
-        role_label="супер-админ",
-        route_path="/dashboard/home",
+        route_paths=(
+            "/dashboard/calling",
+            "/dashboard/calls",
+            "/dashboard/work",
+            "/dashboard/home",
+        ),
         redirect_path="/dashboard/rop",
     ),
 )
@@ -144,58 +101,70 @@ def test_cross_role_direct_urls_show_forbidden_without_data_leak(
     TC-028: супер-админ не открывает экраны РОП.
     TC-029: супер-админ не открывает рабочие экраны оператора.
     """
-    page = authorized_page_factory(access_case.role)
-    direct_access_page = DirectUrlAccessPage(page)
-    route_path = access_case.route_path
+    checked_routes: list[tuple[str, Page, DirectUrlAccessPage]] = []
 
-    direct_access_page.open_protected_route(
-        test_settings.web_base_url,
-        route_path,
-    )
-
-    for description, protected_locator in (
-        direct_access_page.protected_content[route_path].items()
-    ):
-        expect(
-            protected_locator,
-            f"[{access_case.case_id}] при прямом переходе на "
-            f"{route_path} защищённый {description} не должен "
-            "появляться даже кратковременно",
-        ).to_have_count(0)
-
-    observed_dom_markers = direct_access_page.observed_dom_markers()
-    assert observed_dom_markers == [], (
-        f"[{access_case.case_id}] при прямом переходе на "
-        f"{route_path} в DOM кратковременно появились защищённые "
-        f"данные: {observed_dom_markers}"
-    )
-
-    if route_path == "/dashboard/calling":
-        calling_requests = [
-            request_path
-            for request_path in direct_access_page.protected_requests
-            if request_path in DirectUrlAccessPage.CALLING_CAPTURE_ENDPOINTS
-        ]
-        assert calling_requests == [], (
-            f"[{access_case.case_id}] при прямом переходе на "
-            "/dashboard/calling не должны вызываться "
-            "/v1/calling/queue и /v1/calling/next: лид не должен "
-            f"быть захвачен; получены запросы: {calling_requests}"
+    for route_path in access_case.route_paths:
+        page = authorized_page_factory(access_case.role)
+        direct_access_page = DirectUrlAccessPage(page)
+        direct_access_page.open_protected_route(
+            test_settings.web_base_url,
+            route_path,
         )
 
-    assert direct_access_page.protected_responses == [], (
-        f"[{access_case.case_id}] при прямом переходе на "
-        f"{route_path} ожидали отсутствие ответов защищённого API, "
-        f"получили: {direct_access_page.protected_responses}"
-    )
+        for description, protected_locator in (
+            direct_access_page.protected_content[route_path].items()
+        ):
+            expect(
+                protected_locator,
+                f"[{access_case.case_id}] при прямом переходе на "
+                f"{route_path} защищённый {description} не должен "
+                "появляться даже кратковременно",
+            ).to_have_count(0)
 
-    expect(
-        page,
-        f"[{access_case.case_id}] после прямого перехода на "
-        f"{route_path} ожидали сохранение точного адреса заглушки",
-    ).to_have_url(f"{test_settings.web_base_url}{route_path}")
-    expect(
-        direct_access_page.forbidden_heading,
-        f"[{access_case.case_id}] на {route_path} ожидали "
-        "точный заголовок заглушки доступа",
-    ).to_have_text("Permission denied")
+        observed_dom_markers = direct_access_page.observed_dom_markers()
+        assert observed_dom_markers == [], (
+            f"[{access_case.case_id}] при прямом переходе на "
+            f"{route_path} в DOM кратковременно появились защищённые "
+            f"данные: {observed_dom_markers}"
+        )
+
+        if route_path == "/dashboard/calling":
+            calling_requests = [
+                request_path
+                for request_path in direct_access_page.protected_requests
+                if (
+                    request_path
+                    in DirectUrlAccessPage.CALLING_CAPTURE_ENDPOINTS
+                )
+            ]
+            assert calling_requests == [], (
+                f"[{access_case.case_id}] при прямом переходе на "
+                "/dashboard/calling не должны вызываться "
+                "/v1/calling/queue и /v1/calling/next: лид не должен "
+                f"быть захвачен; получены запросы: {calling_requests}"
+            )
+
+        assert direct_access_page.protected_requests == [], (
+            f"[{access_case.case_id}] при прямом переходе на "
+            f"{route_path} ожидали отсутствие запросов защищённого API, "
+            f"получили: {direct_access_page.protected_requests}"
+        )
+        assert direct_access_page.protected_responses == [], (
+            f"[{access_case.case_id}] при прямом переходе на "
+            f"{route_path} ожидали отсутствие ответов защищённого API, "
+            f"получили: {direct_access_page.protected_responses}"
+        )
+
+        checked_routes.append((route_path, page, direct_access_page))
+
+    for route_path, page, direct_access_page in checked_routes:
+        expect(
+            page,
+            f"[{access_case.case_id}] после прямого перехода на "
+            f"{route_path} ожидали сохранение точного адреса заглушки",
+        ).to_have_url(f"{test_settings.web_base_url}{route_path}")
+        expect(
+            direct_access_page.forbidden_heading,
+            f"[{access_case.case_id}] на {route_path} ожидали "
+            "точный заголовок заглушки доступа",
+        ).to_have_text("Permission denied")
