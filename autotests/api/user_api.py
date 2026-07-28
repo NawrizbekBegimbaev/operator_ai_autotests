@@ -77,14 +77,35 @@ class UserApi:
                 "Имя пользователя с апострофом нельзя безопасно подставить "
                 "в API-фильтр."
             )
+        return self.list_users(
+            filter_expression=f"username='{username}'",
+            per_page=100,
+        )
+
+    def list_users(
+        self,
+        *,
+        filter_expression: str,
+        per_page: int,
+    ) -> APIResponse:
         return self.page.request.get(
             self._url(self.USERS_PATH),
             params={
-                "filter": f"username='{username}'",
+                "filter": filter_expression,
                 "page": 1,
-                "perPage": 100,
+                "perPage": per_page,
             },
             headers=self._authorization_headers,
+        )
+
+    def login(self, username: str, password: str) -> APIResponse:
+        return self.page.request.post(
+            self._url("/v1/auth/login"),
+            data={
+                "username": username,
+                "password": password,
+            },
+            headers={"Content-Type": "application/json"},
         )
 
     def get_user(self, user_id: str) -> APIResponse:
@@ -96,6 +117,13 @@ class UserApi:
     def create_operator(self, payload: Mapping[str, Any]) -> APIResponse:
         return self.page.request.post(
             self._url("/v1/operators"),
+            data=dict(payload),
+            headers=self._authorization_headers,
+        )
+
+    def create_rop(self, payload: Mapping[str, Any]) -> APIResponse:
+        return self.page.request.post(
+            self._url("/v1/rops"),
             data=dict(payload),
             headers=self._authorization_headers,
         )
