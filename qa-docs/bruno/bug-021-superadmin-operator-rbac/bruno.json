@@ -1,9 +1,11 @@
 {
-  "version": "1",
   "name": "Operator AI — проверка BUG-021",
   "type": "collection",
   "ignore": [
     "node_modules",
     ".git"
-  ]
+  ],
+  "size": 0.0104522705078125,
+  "filesCount": 7,
+  "version": "1"
 }
