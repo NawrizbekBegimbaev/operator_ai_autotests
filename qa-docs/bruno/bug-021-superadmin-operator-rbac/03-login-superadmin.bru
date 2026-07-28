@@ -11,7 +11,7 @@ meta {
 }
 
 post {
-  url: {{api_base_url}}/v1/auth/login
+  url: {{process.env.OPERATOR_AI_API_BASE_URL}}/v1/auth/login
   body: json
   auth: none
 }
@@ -28,7 +28,7 @@ body:json {
 }
 
 script:pre-request {
-  if (!bru.getVar("api_base_url") || !bru.getVar("operator_id")) {
+  if (!bru.getVar("operator_id")) {
     throw new Error("Сначала успешно выполните запросы 01 и 02.");
   }
 }

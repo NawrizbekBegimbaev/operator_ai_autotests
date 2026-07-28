@@ -11,7 +11,7 @@ meta {
 }
 
 post {
-  url: {{?API base URL staging без завершающего слеша}}/v1/auth/login
+  url: {{process.env.OPERATOR_AI_API_BASE_URL}}/v1/auth/login
   body: json
   auth: none
 }
@@ -38,20 +38,6 @@ script:post-response {
     && typeof res.body.access_token === "string"
     && res.body.access_token.length > 0
   ) {
-    const responseUrl = res.getUrl();
-    const loginPath = "/v1/auth/login";
-    const loginPathIndex = responseUrl.indexOf(loginPath);
-
-    if (loginPathIndex < 0) {
-      throw new Error(
-        "Не удалось определить API base URL из адреса ответа входа."
-      );
-    }
-
-    bru.setVar(
-      "api_base_url",
-      responseUrl.slice(0, loginPathIndex).replace(/\/+$/, "")
-    );
     bru.setVar("rop_access_token", res.body.access_token);
   }
 }
@@ -65,6 +51,6 @@ tests {
 }
 
 docs {
-  Первый запрос очищает старые runtime-переменные и запрашивает URL и
-  учётные данные интерактивно. Значения не сохраняются в коллекции.
+  Первый запрос очищает старые runtime-переменные. API URL загружается из
+  локального .env, а учётные данные запрашиваются интерактивно.
 }

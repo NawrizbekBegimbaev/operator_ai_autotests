@@ -11,7 +11,7 @@ meta {
 }
 
 post {
-  url: {{api_base_url}}/v1/operators
+  url: {{process.env.OPERATOR_AI_API_BASE_URL}}/v1/operators
   body: json
   auth: none
 }
@@ -35,7 +35,7 @@ body:json {
 }
 
 script:pre-request {
-  if (!bru.getVar("api_base_url") || !bru.getVar("rop_access_token")) {
+  if (!bru.getVar("rop_access_token")) {
     throw new Error("Сначала выполните запрос 01 — Войти как тестовый РОП.");
   }
 
