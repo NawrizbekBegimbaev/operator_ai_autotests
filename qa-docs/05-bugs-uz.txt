@@ -110,6 +110,7 @@ BUG-017 | Qo'ng'iroq vaqtida «Operator» maydonidan boshqa operatorni tanlash m
 BUG-018 | Ish kunining boshlanish va tugash vaqti qo'ng'iroqlar navbatini cheklamaydi | Operator interfeysi | P2 | Yangi
 BUG-019 | Kirgandan keyin Operator «Qo'ng'iroqlar» o'rniga «Ish stoli»ga o'tadi | Admin, Operator kirishi | P2 | Bag emas
 BUG-020 | Kirish formasi 6–7 belgili parolni yuboradi, API esa kamida 8 belgi talab qiladi | Admin, kirish ekrani | P2 | Yangi
+BUG-021 | Taqiqlangan to'g'ridan-to'g'ri havolalar «ruxsat yo'q» sahifasi o'rniga foydalanuvchini yo'naltiradi | Admin, RBAC | P2 | Yangi
 
 
 YANGI BAG UCHUN SHABLON
@@ -849,3 +850,37 @@ Qo'shimcha tekshiruv:
 2. UI va API da 5, 6, 7 va 8 belgili chegaralarni tekshiring.
 3. 6–7 belgili paroli bor foydalanuvchilar kira olishini yoki lokalizatsiya qilingan ko'rsatma olishini tekshiring.
 4. Tuzatilgandan keyin TC-007 ni takrorlang va `strict=True` bilan XPASS bo'lgandan keyingina `xfail` belgisini olib tashlang.
+
+
+BUG-021. Taqiqlangan havolalar «ruxsat yo'q» sahifasi o'rniga yo'naltiradi
+-----------------------------------------------------------------------------
+
+Web | Admin — RBAC, Operator va ROP | staging | Taqiqlangan bo'lim ochilganda foydalanuvchi talab qilingan `Permission denied` sahifasi o'rniga o'zining boshlang'ich ekraniga yo'naltiriladi.
+
+Muhimlik: P2, RBAC shartnomasi buzilgan, ma'lumot sizishi aniqlanmadi
+Holat: Yangi
+Sana: 28.07.2026
+
+Tavsif:
+TC-025 va TC-026 bo'yicha Operator va ROP Super-admin bo'limiga to'g'ridan-to'g'ri o'tganda kiritilgan manzilda qolishi va «ruxsat yo'q» sahifasini ko'rishi kerak. Stagingda `RoleBasedGuard` bu sahifa o'rniga rolning boshlang'ich ekraniga o'tkazadi. Ma'lumot himoyasi ishlaydi: `/v1/users`, `/v1/leads`, `/v1/plans` javoblari olinmadi va himoyalangan sarlavhalar DOMda qisqa vaqtga ham ko'rinmadi.
+
+Qadamlar:
+1. Operator sifatida kiring.
+2. Navbat bilan `/dashboard/plans` va `/dashboard/leads` ni oching.
+3. ROP sifatida kiring.
+4. Navbat bilan `/dashboard/rop`, `/dashboard/leads` va `/dashboard/plans` ni oching.
+5. URL, ruxsat yo'qligi sahifasi va himoyalangan ma'lumotlarni tekshiring.
+
+Kutilgan natija:
+Har bir kiritilgan manzil ochiq qoladi. `Permission denied` aniq sarlavhasi va ruxsat yo'qligi sahifasi ko'rinadi. Himoyalangan ma'lumotlar va API javoblari yo'q.
+
+Haqiqiy natija:
+Operator `/dashboard/calls` ga, ROP esa `/dashboard/dynamic-form` ga yo'naltiriladi. `Permission denied` sarlavhasi yo'q. Himoyalangan ma'lumotlar va API javoblari aniqlanmadi.
+
+Ilova:
+TC-025 va TC-026 uchun failure-only Playwright screenshot va trace lokal `test-results` papkasida; pytest chiqishi kutilgan va haqiqiy natijani ko'rsatadi.
+
+Qo'shimcha tekshiruv:
+1. Taqiqlangan o'tish uchun yagona UX ni aniqlashtiring: ruxsat yo'qligi sahifasi yoki yo'naltirish. TC-024 yo'naltirishga ruxsat beradi, TC-025/026 esa sahifani talab qiladi.
+2. ROP va Super-admin uchun Operator ish ekranlarining to'g'ridan-to'g'ri havolalarini tekshiring.
+3. Tuzatilgandan keyin TC-025/026 ni takrorlang va `strict=True` bilan XPASS bo'lgandan keyingina `xfail` belgisini olib tashlang.
