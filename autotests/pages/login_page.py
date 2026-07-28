@@ -13,6 +13,7 @@ class LoginPage:
         self.username_input = page.get_by_label("Логин", exact=True)
         self.password_input = page.get_by_label("Пароль", exact=True)
         self.submit_button = page.get_by_role("button", name="Войти", exact=True)
+        self.error_alert = page.get_by_role("alert")
 
     def open(self, base_url: str) -> None:
         self.page.goto(urljoin(f"{base_url}/", self.SIGN_IN_PATH))
