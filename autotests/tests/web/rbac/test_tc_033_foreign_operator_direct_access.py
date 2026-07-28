@@ -66,6 +66,7 @@ def _assert_forbidden_user_response(
 
 
 @pytest.mark.web
+@pytest.mark.api
 @pytest.mark.critical
 @pytest.mark.negative
 @pytest.mark.security
@@ -75,12 +76,16 @@ def test_tc_033_rop_cannot_open_foreign_operator_by_direct_url(
     test_settings: Settings,
 ) -> None:
     """
-    TC-033 — РОП-А не открывает карточку и звонки оператора РОП-Б.
+    TC-033 / TC-042 — РОП-А не открывает карточку и API-данные
+    оператора РОП-Б.
 
-    Ожидаемый результат: на обоих прямых URL API отвечает точным 403
-    Forbidden / «ruxsat yo'q»; остаётся только каркас целевой страницы,
-    а имя, username, телефон, зарплата и таблица звонков чужого оператора
-    отсутствуют.
+    Ожидаемый результат TC-033: на обоих прямых URL остаётся только
+    каркас целевой страницы, а имя, username, телефон, зарплата и таблица
+    звонков чужого оператора отсутствуют.
+
+    Ожидаемый результат TC-042: GET /v1/users/{id} чужого оператора
+    отвечает точным 403 Forbidden / «ruxsat yo'q» и не возвращает его
+    данные.
     """
     tenant_a, tenant_b = tc032_tenants
     page = tenant_a.api.page
