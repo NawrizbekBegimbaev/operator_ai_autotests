@@ -111,6 +111,7 @@ BUG-018 | Ish kunining boshlanish va tugash vaqti qo'ng'iroqlar navbatini chekla
 BUG-019 | Kirish formasi 6–7 belgili parolni yuboradi, API esa kamida 8 belgi talab qiladi | Admin, kirish ekrani | P2 | Yangi
 BUG-020 | Taqiqlangan to'g'ridan-to'g'ri havolalar «ruxsat yo'q» sahifasi o'rniga foydalanuvchini yo'naltiradi | Admin, RBAC | P2 | Yangi
 BUG-021 | Super-admin ROP operatorini API orqali o'zgartira oladi | Admin API, foydalanuvchilar RBAC | P1 | Yangi
+BUG-022 | Staging JavaScript va CSS o'rniga HTML qaytaradi | Staging, Admin statik assetlari | P1 | Yangi
 
 
 YANGI BAG UCHUN SHABLON
@@ -904,3 +905,36 @@ Qo'shimcha tekshiruv:
 2. Super-admin uchun operator kartochkasi va ro'yxatini o'qish imkonini saqlang.
 3. ROP hanuz faqat o'z operatorlarini boshqara olishini tekshiring.
 4. Tuzatilgandan keyin TC-031 ni takrorlang va faqat `strict=True` bilan XPASS bo'lgandan so'ng `xfail` belgisini olib tashlang.
+
+
+BUG-022. Staging JavaScript va CSS o'rniga HTML qaytaradi
+---------------------------------------------------------
+
+Web | Staging — Admin statik assetlari | staging | Asosiy JavaScript va CSS URL manzillari vaqti-vaqti bilan ilova qobig'ining HTML faylini qaytaradi, shu sababli `#root` bo'sh qoladi va UI yuklanmaydi.
+
+Muhimlik: P1, stend vaqti-vaqti bilan UI tekshiruvlari uchun to'liq ishlamaydi
+Holat: Yangi
+Sana: 28.07.2026
+
+Tavsif:
+TC-001…TC-005 va TC-032…TC-033 ketma-ket bajarilganda kirish formasi hamda avtorizatsiyalangan sahifalar vaqti-vaqti bilan chizilmadi. Headed takrorlash test qadamlarigacha bo'sh UI holatini tasdiqladi. Joriy HTML ichidagi assetlarga to'g'ridan-to'g'ri so'rov server kerakli turdagi fayllar o'rniga `index.html` hujjatini qaytarayotganini ko'rsatdi.
+
+Qadamlar:
+1. Stagingda `/auth/jwt/sign-in` ni oching va HTML ichidagi `script` hamda `stylesheet` yo'llarini yozib oling.
+2. `/assets/index-DNS_iKEf.js` ni so'rang.
+3. `/assets/index-C2HJuuaF.css` ni so'rang.
+4. Brauzerda kirish sahifasi yoki ichki bo'limni qayta oching.
+
+Kutilgan natija:
+JavaScript JavaScript MIME type va bundle tarkibi bilan, CSS esa `text/css` bilan qaytadi. Kirish formasi va avtorizatsiyalangan sahifalar barqaror chiziladi.
+
+Haqiqiy natija:
+Ikkala asset URL ham HTTP 200, `Content-Type: text/html`, `Content-Length: 491` va ilova qobig'ining HTML faylini qaytardi. Brauzerda «Логин» semantik maydoni yoki sahifa ma'lumotlarini yuklash so'rovi 30 soniyada paydo bo'lmadi. Umumiy natija `1 failed, 4 passed`; izolyatsiyalangan TC-002 keyin o'tdi (`1 passed, 1 deselected`), bu login funksional xatosi emas, balki o'zgaruvchan deploy holati ekanini tasdiqlaydi.
+
+Ilova:
+TC-033 headed pytest chiqishi va ikki asset uchun to'g'ridan-to'g'ri HTTP so'rov natijalari ish jurnalida qayd etilgan.
+
+Qo'shimcha tekshiruv:
+1. `index.html` va hashli asset fayllari atomar deploy qilinishini tekshiring.
+2. Fallback qoidalarini tekshiring: `/assets/*` so'rovlari `index.html` ni qaytarmasligi kerak.
+3. Tuzatilgandan keyin TC-001…TC-005 va TC-032…TC-033 ni ketma-ket kamida ikki marta bajaring.
