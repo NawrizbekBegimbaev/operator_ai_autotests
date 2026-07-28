@@ -1,6 +1,10 @@
 project/
 .env
 *.env
+.venv/
+.pytest_cache/
+__pycache__/
+*.py[cod]
 node_modules/
 test-results/
 playwright-report/
