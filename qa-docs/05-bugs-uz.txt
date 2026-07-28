@@ -108,9 +108,9 @@ BUG-015 | «Soatsiz kelishuv uchun qo'ng'iroq vaqti» maydonida sana o'rniga vaq
 BUG-016 | Operator ma'lumotlari o'zgartirilganda uning faol sessiyasi tugamaydi | Admin va Operator interfeysi | P2 | Yangi
 BUG-017 | Qo'ng'iroq vaqtida «Operator» maydonidan boshqa operatorni tanlash mumkin | Operator interfeysi | P2 | Yangi
 BUG-018 | Ish kunining boshlanish va tugash vaqti qo'ng'iroqlar navbatini cheklamaydi | Operator interfeysi | P2 | Yangi
-BUG-019 | Kirgandan keyin Operator «Qo'ng'iroqlar» o'rniga «Ish stoli»ga o'tadi | Admin, Operator kirishi | P2 | Bag emas
-BUG-020 | Kirish formasi 6–7 belgili parolni yuboradi, API esa kamida 8 belgi talab qiladi | Admin, kirish ekrani | P2 | Yangi
-BUG-021 | Taqiqlangan to'g'ridan-to'g'ri havolalar «ruxsat yo'q» sahifasi o'rniga foydalanuvchini yo'naltiradi | Admin, RBAC | P2 | Yangi
+BUG-019 | Kirish formasi 6–7 belgili parolni yuboradi, API esa kamida 8 belgi talab qiladi | Admin, kirish ekrani | P2 | Yangi
+BUG-020 | Taqiqlangan to'g'ridan-to'g'ri havolalar «ruxsat yo'q» sahifasi o'rniga foydalanuvchini yo'naltiradi | Admin, RBAC | P2 | Yangi
+BUG-021 | Super-admin ROP operatorini API orqali o'zgartira oladi | Admin API, foydalanuvchilar RBAC | P1 | Yangi
 
 
 YANGI BAG UCHUN SHABLON
@@ -778,45 +778,7 @@ Qo'shimcha tekshiruv:
 5. Cheklov avtomatik va qo'lda boshlanadigan qo'ng'iroqlarga bir xil qo'llanishini tekshiring.
 
 
-BUG-019. Kirgandan keyin Operator «Qo'ng'iroqlar» o'rniga «Ish stoli»ga o'tadi
---------------------------------------------------------------------------------
-
-Web | Admin — Operator kirishi | staging | Muvaffaqiyatli avtorizatsiyadan keyin Operator `/dashboard/calls` o'rniga `/dashboard/home` sahifasiga yo'naltiriladi.
-
-Muhimlik: P2
-Holat: Bag emas
-Sana: 28.07.2026
-
-28.07.2026 kungi tahlil natijasi:
-`/dashboard/home` sahifasiga o'tish mahsulot egasi tomonidan to'g'ri xatti-harakat sifatida tasdiqlandi. Tafovut ilova nuqsoni emas, TC-003 dagi eskirgan kutilgan natija sababli yuzaga kelgan. TC-003 va uning avtotesti «haqiqiy xatti-harakat bo'yicha aniqlashtirildi, 28.07.2026» belgisi bilan birga yangilandi; `xfail` olib tashlandi.
-
-Tavsif:
-Dastlabki tekshiruvda TC-003 va frontendning lokal mantig'i «Qo'ng'iroqlar» bo'limini Operatorning boshlang'ich sahifasi sifatida ko'rsatgan. Stagingda login va parol qabul qilingan, avtorizatsiya muvaffaqiyatli tugagan, lekin «Ish stoli» ochilgan. Talab aniqlashtirilgandan keyin bu xatti-harakat to'g'ri deb topildi.
-
-Qadamlar:
-1. Faol sessiyasiz staging Admin kirish sahifasini oching.
-2. Operatorning to'g'ri login va parolini kiriting.
-3. «Kirish» tugmasini bosing.
-4. Ochilgan sahifaning manzili va tarkibini tekshiring.
-
-Avvalgi kutilgan natija:
-`/dashboard/calls` ochiladi: «Qo'ng'iroqlar» bo'limidagi lidlar jadvali va Operator menyusi ko'rinadi.
-
-Haqiqiy natija:
-`/dashboard/home` ochiladi: Operatorning «Ish stoli» ko'rinadi. Avtorizatsiya muvaffaqiyatli, Operator menyusi mavjud.
-
-28.07.2026 kuni aniqlashtirilgan to'g'ri natija:
-Muvaffaqiyatli kirgandan keyin Operator `/dashboard/home` sahifasiga o'tadi. Sahifada «So'nggi qo'ng'iroqlar» bo'limi, «Qo'ng'iroqni boshlash» tugmasi va Operator menyusi ko'rinadi.
-
-Ilova:
-TC-003 yiqilganda Playwright screenshot va trace fayllarini lokal `test-results` papkasida saqladi. Test ma'lumotlari bo'lishi mumkinligi sababli ular Gitga qo'shilmadi.
-
-Qo'shimcha tekshiruv:
-1. `getDefaultDashboardPath` ni tasdiqlangan `/dashboard/home` boshlang'ich manzili bilan sinxronlang.
-2. ROP va Super-adminning boshlang'ich sahifalarini tekshiring.
-
-
-BUG-020. Kirish formasi va API parolning turli minimal uzunligini ishlatadi
+BUG-019. Kirish formasi va API parolning turli minimal uzunligini ishlatadi
 -----------------------------------------------------------------------------
 
 Web | Admin — kirish ekrani | staging | Forma 6 yoki 7 belgili parolni yuborishga ruxsat beradi, lekin kirish API si kamida 8 belgi talab qiladi va `validation failed` texnik xabarini qaytaradi.
@@ -852,35 +814,93 @@ Qo'shimcha tekshiruv:
 4. Tuzatilgandan keyin TC-007 ni takrorlang va `strict=True` bilan XPASS bo'lgandan keyingina `xfail` belgisini olib tashlang.
 
 
-BUG-021. Taqiqlangan havolalar «ruxsat yo'q» sahifasi o'rniga yo'naltiradi
+BUG-020. Taqiqlangan havolalar «ruxsat yo'q» sahifasi o'rniga yo'naltiradi
 -----------------------------------------------------------------------------
 
-Web | Admin — RBAC, Operator va ROP | staging | Taqiqlangan bo'lim ochilganda foydalanuvchi talab qilingan `Permission denied` sahifasi o'rniga o'zining boshlang'ich ekraniga yo'naltiriladi.
+Web — Chromium / Windows | Admin — RBAC, Operator, ROP va Super-admin | staging | Taqiqlangan bo'lim ochilganda foydalanuvchi talab qilingan `Permission denied` sahifasi o'rniga o'zining boshlang'ich ekraniga yo'naltiriladi.
 
 Muhimlik: P2, RBAC shartnomasi buzilgan, ma'lumot sizishi aniqlanmadi
 Holat: Yangi
 Sana: 28.07.2026
 
+Bog'liq testlar: TC-025, TC-026, TC-027, TC-028, TC-029
+
+Old shartlar:
+1. Operator, ROP va Super-admin uchun faol test hisoblari mavjud.
+2. Tekshiruv stagingda har bir rolning alohida avtorizatsiya qilingan sessiyasida bajariladi.
+3. To'g'ridan-to'g'ri manzillar brauzerning manzil satriga kiritiladi; taqiqlangan bo'lim ichidagi tugma va amallar ishlatilmaydi.
+
 Tavsif:
-TC-025 va TC-026 bo'yicha Operator va ROP Super-admin bo'limiga to'g'ridan-to'g'ri o'tganda kiritilgan manzilda qolishi va «ruxsat yo'q» sahifasini ko'rishi kerak. Stagingda `RoleBasedGuard` bu sahifa o'rniga rolning boshlang'ich ekraniga o'tkazadi. Ma'lumot himoyasi ishlaydi: `/v1/users`, `/v1/leads`, `/v1/plans` javoblari olinmadi va himoyalangan sarlavhalar DOMda qisqa vaqtga ham ko'rinmadi.
+TC-025…TC-029 talablariga ko'ra foydalanuvchi boshqa rol bo'limiga to'g'ridan-to'g'ri o'tganda kiritilgan manzilda qolishi va «ruxsat yo'q» sahifasini ko'rishi kerak. Stagingda `RoleBasedGuard` bu sahifa o'rniga foydalanuvchini o'z rolining boshlang'ich ekraniga o'tkazadi. Nuqson Operator, ROP va Super-admin uchun takrorlanadi.
+
+Qisqa ma'lumot sizishi tekshiruvida himoyalangan sarlavhalar DOMda ko'rinmadi va himoyalangan API javoblari olinmadi. `/dashboard/calling` uchun `/v1/calling/queue` va `/v1/calling/next` so'rovlari yuborilmagani alohida tasdiqlandi: lid egallanganining belgisi yo'q.
 
 Qadamlar:
-1. Operator sifatida kiring.
-2. Navbat bilan `/dashboard/plans` va `/dashboard/leads` ni oching.
-3. ROP sifatida kiring.
-4. Navbat bilan `/dashboard/rop`, `/dashboard/leads` va `/dashboard/plans` ni oching.
-5. URL, ruxsat yo'qligi sahifasi va himoyalangan ma'lumotlarni tekshiring.
+1. Operator sifatida kiring va navbat bilan `/dashboard/plans` hamda `/dashboard/leads` ni oching.
+2. ROP sifatida kiring va navbat bilan quyidagilarni oching:
+   - `/dashboard/rop`, `/dashboard/leads`, `/dashboard/plans`;
+   - `/dashboard/calling`, `/dashboard/work`, `/dashboard/home`.
+3. Super-admin sifatida kiring va navbat bilan quyidagilarni oching:
+   - `/dashboard/dynamic-form`, `/dashboard/mezonlar`, `/dashboard/operator-pipelines`, `/dashboard/attendance`;
+   - `/dashboard/calling`, `/dashboard/calls`, `/dashboard/work`, `/dashboard/home`.
+4. Har bir o'tishda joriy URL va `Permission denied` sarlavhasini tekshiring.
+5. DevTools → Network orqali himoyalangan API javoblari yo'qligini tekshiring.
+6. `/dashboard/calling` uchun `/v1/calling/queue` va `/v1/calling/next` so'rovlari yuborilmaganini alohida tekshiring.
 
 Kutilgan natija:
-Har bir kiritilgan manzil ochiq qoladi. `Permission denied` aniq sarlavhasi va ruxsat yo'qligi sahifasi ko'rinadi. Himoyalangan ma'lumotlar va API javoblari yo'q.
+Har bir kiritilgan taqiqlangan manzil ochiq qoladi. `Permission denied` aniq sarlavhasi va ruxsat yo'qligi sahifasi ko'rinadi. Himoyalangan ma'lumotlar va API javoblari yo'q. `/dashboard/calling` ga o'tganda navbat so'ralmaydi va lid egallanmaydi.
 
 Haqiqiy natija:
-Operator `/dashboard/calls` ga, ROP esa `/dashboard/dynamic-form` ga yo'naltiriladi. `Permission denied` sarlavhasi yo'q. Himoyalangan ma'lumotlar va API javoblari aniqlanmadi.
+- Operator `/dashboard/calls` ga yo'naltiriladi.
+- ROP `/dashboard/dynamic-form` ga yo'naltiriladi.
+- Super-admin `/dashboard/rop` ga yo'naltiriladi.
+
+`Permission denied` sarlavhasi yo'q. Himoyalangan ma'lumotlar va API javoblari aniqlanmadi. Taqiqlangan o'tishda `/v1/calling/queue` va `/v1/calling/next` so'rovlari yuborilmadi.
+
+Takrorlanish: tekshirilgan 16 ta taqiqlangan o'tishning 16 tasida.
 
 Ilova:
-TC-025 va TC-026 uchun failure-only Playwright screenshot va trace lokal `test-results` papkasida; pytest chiqishi kutilgan va haqiqiy natijani ko'rsatadi.
+1. Failure-only Playwright screenshot va trace fayllari lokal `test-results` papkasida saqlanadi va test ma'lumotlari bo'lishi mumkinligi sababli Gitga qo'shilmaydi.
+2. TC-027…TC-029 avtomatik testlari: `autotests/tests/web/rbac/test_tc_027_tc_029_cross_role_direct_urls.py`, commit `f28115a3f777fa3c7a6ac54f1f6239776fe207f9`.
+3. TC-027…TC-029 staging natijasi: BUG-020 sababli `11 xfailed`; diagnostik `--runxfail` DOM/API sizishi yo'qligi tekshiruvlaridan keyingi yo'naltirishlarni tasdiqladi.
 
 Qo'shimcha tekshiruv:
-1. Taqiqlangan o'tish uchun yagona UX ni aniqlashtiring: ruxsat yo'qligi sahifasi yoki yo'naltirish. TC-024 yo'naltirishga ruxsat beradi, TC-025/026 esa sahifani talab qiladi.
-2. ROP va Super-admin uchun Operator ish ekranlarining to'g'ridan-to'g'ri havolalarini tekshiring.
-3. Tuzatilgandan keyin TC-025/026 ni takrorlang va `strict=True` bilan XPASS bo'lgandan keyingina `xfail` belgisini olib tashlang.
+1. TC-024 istisnosini saqlang: Operator uchun `/dashboard/rop` manzilidan `/dashboard/calls` ga yo'naltirish kutiladi.
+2. Tuzatilgandan keyin TC-025…TC-029 ni barcha rollar va manzillar uchun takrorlang.
+3. Barcha bog'liq parametrlar `strict=True` bilan XPASS bo'lgandan keyingina `xfail` belgisini olib tashlang.
+4. Ruxsat berilgan bo'limlar ochilishda davom etishini tekshirish uchun menyu va to'g'ridan-to'g'ri havolalar regressiyasini bajaring.
+
+
+BUG-021. Super-admin ROP operatorini API orqali o'zgartira oladi
+----------------------------------------------------------------
+
+API | Admin — foydalanuvchilar RBAC | staging | `PATCH /v1/users/{id}` super-adminga operatorni o'zgartirishga ruxsat beradi, holbuki ROP operatorlariga kirish faqat ko'rish uchun bo'lishi kerak.
+
+Muhimlik: P1, platforma egasi va mijoz ma'lumotlari o'rtasidagi server RBAC buzilgan
+Holat: Yangi
+Sana: 28.07.2026
+
+Tavsif:
+TC-031 bo'yicha super-admin ROP operatorlarini ko'rishi mumkin, ammo ularni o'zgartira olmasligi kerak. Stagingda super-admin tokeni bilan operatorni o'zgartirish so'rovi muvaffaqiyatli bajariladi. Server rad javobi o'rniga to'liq o'zgartirilgan yozuvni qaytaradi.
+
+Qadamlar:
+1. Test ROP nomidan API orqali noyob `AT-<uuid>` operatorini yarating.
+2. Yaratilgan operator yozuvini `GET /v1/users/{id}` orqali oling.
+3. Super-admin tokeni bilan yangi `first_name` qiymatini yuborib, `PATCH /v1/users/{id}` so'rovini bajaring.
+4. Operator yozuvini qayta oling.
+5. Test operatorini uning ROP nomidan API orqali o'chiring.
+
+Kutilgan natija:
+`PATCH` HTTP 403 qaytaradi. Xato tanasida `status=403`, `title=Forbidden`, `detail="ruxsat yo'q"` bo'ladi. Operator yozuvi to'liq o'zgarishsiz qoladi.
+
+Haqiqiy natija:
+`PATCH` HTTP 200 qaytaradi. Yangi ism saqlanadi va `updated_at` o'zgaradi. Takroriy `GET` o'zgartirilgan yozuvni qaytaradi.
+
+Ilova:
+TC-031 diagnostik pytest chiqishi; failure-only trace va screenshot fayllari lokal `test-results` papkasida saqlanadi.
+
+Qo'shimcha tekshiruv:
+1. ROP operatorlari uchun super-adminga `PATCH /v1/users/{id}`, `POST /v1/users/{id}/password` va `DELETE /v1/users/{id}` amallarini taqiqlang.
+2. Super-admin uchun operator kartochkasi va ro'yxatini o'qish imkonini saqlang.
+3. ROP hanuz faqat o'z operatorlarini boshqara olishini tekshiring.
+4. Tuzatilgandan keyin TC-031 ni takrorlang va faqat `strict=True` bilan XPASS bo'lgandan so'ng `xfail` belgisini olib tashlang.

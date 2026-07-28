@@ -61,7 +61,7 @@ DIRECT_URL_ACCESS_CASES = (
         ),
         marks=pytest.mark.xfail(
             reason=(
-                "BUG-021: вместо заглушки доступа оператор перенаправляется "
+                "BUG-020: вместо заглушки доступа оператор перенаправляется "
                 "на /dashboard/calls"
             ),
             strict=True,
@@ -92,7 +92,7 @@ DIRECT_URL_ACCESS_CASES = (
         ),
         marks=pytest.mark.xfail(
             reason=(
-                "BUG-021: вместо заглушки доступа РОП перенаправляется "
+                "BUG-020: вместо заглушки доступа РОП перенаправляется "
                 "на /dashboard/dynamic-form"
             ),
             strict=True,

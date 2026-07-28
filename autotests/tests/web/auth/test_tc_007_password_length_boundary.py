@@ -18,7 +18,7 @@ from autotests.support.network import track_requests
 @pytest.mark.auth
 @pytest.mark.xfail(
     reason=(
-        "BUG-020: frontend отправляет пароль из 6 символов, но API отклоняет "
+        "BUG-019: frontend отправляет пароль из 6 символов, но API отклоняет "
         "его своей границей 8 и UI показывает «validation failed»"
     ),
     strict=True,

@@ -89,7 +89,7 @@ def tc031_test_operator(
 @pytest.mark.rbac
 @pytest.mark.xfail(
     reason=(
-        "BUG-022: super-admin может изменить оператора РОП через "
+        "BUG-021: super-admin может изменить оператора РОП через "
         "PATCH /v1/users/{id}"
     ),
     strict=True,

@@ -36,7 +36,7 @@ def _cross_role_param(
         ),
         marks=pytest.mark.xfail(
             reason=(
-                f"BUG-021: вместо заглушек доступа {role_label} "
+                f"BUG-020: вместо заглушек доступа {role_label} "
                 f"перенаправляется на {redirect_path}"
             ),
             strict=True,
