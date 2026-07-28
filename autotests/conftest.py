@@ -8,6 +8,7 @@ from typing import Any
 
 import pytest
 from playwright.sync_api import Browser, BrowserContext, Page, expect
+from playwright.sync_api import Playwright
 
 from autotests.config import ConfigurationError, Settings
 from autotests.pages.login_page import LoginPage
@@ -16,6 +17,7 @@ from autotests.pages.login_page import LoginPage
 StorageState = dict[str, Any]
 RoleStorageStateProvider = Callable[[str], StorageState]
 AuthorizedPageFactory = Callable[[str], Page]
+RoleApiTokenProvider = Callable[[str], str]
 
 ROLE_START_PATHS = {
     "superadmin": "/dashboard/rop",
@@ -38,6 +40,75 @@ def api_base_url(test_settings: Settings) -> str:
         return test_settings.require_api_base_url()
     except ConfigurationError as error:
         raise pytest.UsageError(str(error)) from error
+
+
+@pytest.fixture(scope="session")
+def role_api_token(
+    playwright: Playwright,
+    api_base_url: str,
+    test_settings: Settings,
+) -> RoleApiTokenProvider:
+    """Ленивый session-кэш API-токена для каждой роли под lock."""
+    cached_tokens: dict[str, str] = {}
+    cache_lock = Lock()
+
+    def get_api_token(role: str) -> str:
+        with cache_lock:
+            if role in cached_tokens:
+                return cached_tokens[role]
+
+            username, password = _credentials_for_role(
+                test_settings,
+                role,
+            )
+            request_context = playwright.request.new_context(
+                base_url=api_base_url,
+            )
+            try:
+                response = request_context.post(
+                    "/v1/auth/login",
+                    data={
+                        "username": username,
+                        "password": password,
+                    },
+                )
+                actual_status = response.status
+                response_text = response.text()
+                body = response.json()
+            finally:
+                request_context.dispose()
+
+            assert actual_status == 200, (
+                f"[api_token:{role}] ожидали 200 при служебном входе, "
+                f"получили {actual_status}: {response_text}"
+            )
+            assert isinstance(body, dict), (
+                f"[api_token:{role}] ожидали JSON-объект входа, "
+                f"получили {body!r}"
+            )
+            user = body.get("user")
+            assert isinstance(user, dict), (
+                f"[api_token:{role}] ожидали объект user, "
+                f"получили {user!r}: {body!r}"
+            )
+            expected_api_role = {
+                "superadmin": "super_admin",
+                "rop": "rop",
+                "operator": "operator",
+            }[role]
+            assert user.get("role") == expected_api_role, (
+                f"[api_token:{role}] ожидали role={expected_api_role!r}, "
+                f"получили {user.get('role')!r}: {user!r}"
+            )
+            access_token = body.get("access_token")
+            assert isinstance(access_token, str) and access_token, (
+                f"[api_token:{role}] ожидали непустой access_token: "
+                f"{body!r}"
+            )
+            cached_tokens[role] = access_token
+            return cached_tokens[role]
+
+    return get_api_token
 
 
 @pytest.fixture(scope="session")
