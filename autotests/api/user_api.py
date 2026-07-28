@@ -43,7 +43,8 @@ class UserApi:
                 urljoin(
                     f"{web_base_url}/",
                     discovery_path.lstrip("/"),
-                )
+                ),
+                wait_until="commit",
             )
 
         users_response_url = urlsplit(users_response_info.value.url)
@@ -80,6 +81,12 @@ class UserApi:
         return self.list_users(
             filter_expression=f"username='{username}'",
             per_page=100,
+        )
+
+    @property
+    def authorization_token(self) -> str:
+        return self._authorization_headers["Authorization"].removeprefix(
+            "Bearer "
         )
 
     def list_users(

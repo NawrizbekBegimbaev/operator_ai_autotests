@@ -30,7 +30,10 @@ class LoginPage:
         self.password_validation = page.locator("#signin-password-helper-text")
 
     def open(self, base_url: str) -> None:
-        self.page.goto(urljoin(f"{base_url}/", self.SIGN_IN_PATH))
+        self.page.goto(
+            urljoin(f"{base_url}/", self.SIGN_IN_PATH),
+            wait_until="commit",
+        )
 
     def sign_in(self, username: str, password: str) -> None:
         self.username_input.fill(username)
