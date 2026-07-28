@@ -17,11 +17,21 @@ class ConfigurationError(RuntimeError):
 
 
 @dataclass(frozen=True)
+class Credentials:
+    username: str
+    password: str
+
+
+@dataclass(frozen=True)
 class Settings:
     target_env: str
     web_base_url: str
     superadmin_username: str
     superadmin_password: str
+    rop_username: str = ""
+    rop_password: str = ""
+    operator_username: str = ""
+    operator_password: str = ""
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -33,8 +43,17 @@ class Settings:
             "OPERATOR_AI_SUPERADMIN_USERNAME",
             "OPERATOR_AI_SUPERADMIN_PASSWORD",
         )
-        values = {name: os.getenv(name, "").strip() for name in required_names}
-        missing = [name for name, value in values.items() if not value]
+        role_names = (
+            "OPERATOR_AI_ROP_USERNAME",
+            "OPERATOR_AI_ROP_PASSWORD",
+            "OPERATOR_AI_OPERATOR_USERNAME",
+            "OPERATOR_AI_OPERATOR_PASSWORD",
+        )
+        values = {
+            name: os.getenv(name, "").strip()
+            for name in (*required_names, *role_names)
+        }
+        missing = [name for name in required_names if not values[name]]
         if missing:
             names = ", ".join(missing)
             raise ConfigurationError(
@@ -65,4 +84,44 @@ class Settings:
             web_base_url=web_base_url,
             superadmin_username=values["OPERATOR_AI_SUPERADMIN_USERNAME"],
             superadmin_password=values["OPERATOR_AI_SUPERADMIN_PASSWORD"],
+            rop_username=values["OPERATOR_AI_ROP_USERNAME"],
+            rop_password=values["OPERATOR_AI_ROP_PASSWORD"],
+            operator_username=values["OPERATOR_AI_OPERATOR_USERNAME"],
+            operator_password=values["OPERATOR_AI_OPERATOR_PASSWORD"],
         )
+
+    def credentials_for(self, role: str) -> Credentials:
+        role_settings = {
+            "rop": (
+                self.rop_username,
+                self.rop_password,
+                "OPERATOR_AI_ROP_USERNAME",
+                "OPERATOR_AI_ROP_PASSWORD",
+            ),
+            "operator": (
+                self.operator_username,
+                self.operator_password,
+                "OPERATOR_AI_OPERATOR_USERNAME",
+                "OPERATOR_AI_OPERATOR_PASSWORD",
+            ),
+        }
+        if role not in role_settings:
+            raise ConfigurationError(f"Неизвестная роль для авторизации: {role!r}.")
+
+        username, password, username_name, password_name = role_settings[role]
+        missing = [
+            name
+            for name, value in (
+                (username_name, username),
+                (password_name, password),
+            )
+            if not value
+        ]
+        if missing:
+            names = ", ".join(missing)
+            raise ConfigurationError(
+                "Не заданы обязательные переменные окружения для роли "
+                f"{role!r}: {names}. Добавьте их в локальный .env."
+            )
+
+        return Credentials(username=username, password=password)
