@@ -33,6 +33,14 @@ def test_settings() -> Settings:
 
 
 @pytest.fixture(scope="session")
+def api_base_url(test_settings: Settings) -> str:
+    try:
+        return test_settings.require_api_base_url()
+    except ConfigurationError as error:
+        raise pytest.UsageError(str(error)) from error
+
+
+@pytest.fixture(scope="session")
 def browser_context_args(
     browser_context_args: dict[str, object],
 ) -> dict[str, object]:

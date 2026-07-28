@@ -28,6 +28,7 @@ class Settings:
     web_base_url: str
     superadmin_username: str
     superadmin_password: str
+    api_base_url: str = ""
     rop_username: str = ""
     rop_password: str = ""
     operator_username: str = ""
@@ -49,9 +50,10 @@ class Settings:
             "OPERATOR_AI_OPERATOR_USERNAME",
             "OPERATOR_AI_OPERATOR_PASSWORD",
         )
+        optional_names = ("OPERATOR_AI_API_BASE_URL",)
         values = {
             name: os.getenv(name, "").strip()
-            for name in (*required_names, *role_names)
+            for name in (*required_names, *role_names, *optional_names)
         }
         missing = [name for name in required_names if not values[name]]
         if missing:
@@ -78,17 +80,47 @@ class Settings:
         web_base_url = urlunsplit(
             (parsed_url.scheme, parsed_url.netloc, "", "", "")
         ).rstrip("/")
+        configured_api_url = values["OPERATOR_AI_API_BASE_URL"]
+        api_base_url = ""
+        if configured_api_url:
+            parsed_api_url = urlsplit(configured_api_url)
+            if (
+                parsed_api_url.scheme not in {"http", "https"}
+                or not parsed_api_url.netloc
+            ):
+                raise ConfigurationError(
+                    "OPERATOR_AI_API_BASE_URL должен быть абсолютным "
+                    "HTTP(S)-адресом."
+                )
+            api_base_url = urlunsplit(
+                (
+                    parsed_api_url.scheme,
+                    parsed_api_url.netloc,
+                    "",
+                    "",
+                    "",
+                )
+            ).rstrip("/")
 
         return cls(
             target_env=target_env,
             web_base_url=web_base_url,
             superadmin_username=values["OPERATOR_AI_SUPERADMIN_USERNAME"],
             superadmin_password=values["OPERATOR_AI_SUPERADMIN_PASSWORD"],
+            api_base_url=api_base_url,
             rop_username=values["OPERATOR_AI_ROP_USERNAME"],
             rop_password=values["OPERATOR_AI_ROP_PASSWORD"],
             operator_username=values["OPERATOR_AI_OPERATOR_USERNAME"],
             operator_password=values["OPERATOR_AI_OPERATOR_PASSWORD"],
         )
+
+    def require_api_base_url(self) -> str:
+        if not self.api_base_url:
+            raise ConfigurationError(
+                "Не задан OPERATOR_AI_API_BASE_URL. Добавьте абсолютный "
+                "адрес API staging/test в локальный .env."
+            )
+        return self.api_base_url
 
     def credentials_for(self, role: str) -> Credentials:
         role_settings = {
