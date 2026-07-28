@@ -53,3 +53,62 @@
 - В конфиге автотестов переменная окружения с URL бэкенда обязательна:
   при её отсутствии тесты должны падать с ошибкой, а не использовать
   какой-либо URL по умолчанию (риск R-10 — дефолт ведёт на прод)
+
+<!-- CODEX_SESSION_POLICY
+scope: all_codex_sessions
+
+on.suspected_product_defect:
+  - notify_user_immediately: true
+  - notification_fields:
+      - test_case_id
+      - environment
+      - exact_expected_result
+      - exact_actual_result
+      - evidence
+      - confidence_and_open_questions
+  - before_user_response:
+      allow:
+        - read_only_diagnostics
+        - safe_reproduction
+        - failure_artifact_collection
+      deny:
+        - bug_registry_write
+        - external_bug_tracker_write
+        - xfail_addition
+        - expected_result_change
+        - assertion_weakening
+        - product_behavior_interpretation_as_fact
+  - if_user_confirms_expected_behavior:
+      classification: not_a_bug
+      prohibited:
+        - xfail
+        - bug_record
+      case_source_update:
+        requires_explicit_user_approval: true
+        annotation: "уточнено по факту + YYYY-MM-DD"
+  - if_user_confirms_defect:
+      required:
+        - bug_record
+        - pytest_xfail_strict_true
+        - diagnostic_assertions_preserved
+
+on.uncertainty_or_missing_knowledge:
+  - ask_user_before_committing_an_interpretation: true
+  - include:
+      - what_is_known
+      - what_is_unknown
+      - why_the_choice_changes_the_test_or_expected_result
+  - do_not_guess:
+      - product_contract
+      - accepted_redirect
+      - accepted_status_code
+      - localization_text
+      - role_permissions
+      - whether_observed_behavior_is_a_bug
+  - continue_only_with_safe_non_mutating_diagnostics_until_answer: true
+
+cross_session:
+  - read_this_policy_before_QA_work: mandatory
+  - user_confirmation_from_another_session_is_not_assumed_without_repository_evidence
+  - never_hide_a_suspected_defect_in_a_final_summary
+-->
