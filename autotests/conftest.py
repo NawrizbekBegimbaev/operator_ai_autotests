@@ -2,16 +2,26 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Generator
+from datetime import date
 from pathlib import Path
 from threading import Lock
 from typing import Any
+from uuid import uuid4
 
 import pytest
-from playwright.sync_api import Browser, BrowserContext, Page, expect
+from playwright.sync_api import (
+    APIRequestContext,
+    Browser,
+    BrowserContext,
+    Page,
+    expect,
+)
 from playwright.sync_api import Playwright
 
 from autotests.config import ConfigurationError, Settings
 from autotests.pages.login_page import LoginPage
+from autotests.support.login_rate_guard import LoginRateGuard
+from autotests.support.temporary_users import OperatorDraft, TemporaryOperator
 
 
 StorageState = dict[str, Any]
@@ -43,10 +53,16 @@ def api_base_url(test_settings: Settings) -> str:
 
 
 @pytest.fixture(scope="session")
+def login_rate_guard() -> LoginRateGuard:
+    return LoginRateGuard()
+
+
+@pytest.fixture(scope="session")
 def role_api_token(
     playwright: Playwright,
     api_base_url: str,
     test_settings: Settings,
+    login_rate_guard: LoginRateGuard,
 ) -> RoleApiTokenProvider:
     """Ленивый session-кэш API-токена для каждой роли под lock."""
     cached_tokens: dict[str, str] = {}
@@ -65,6 +81,7 @@ def role_api_token(
                 base_url=api_base_url,
             )
             try:
+                login_rate_guard.before_attempt()
                 response = request_context.post(
                     "/v1/auth/login",
                     data={
@@ -112,6 +129,25 @@ def role_api_token(
 
 
 @pytest.fixture(scope="session")
+def rop_api_request(
+    playwright: Playwright,
+    api_base_url: str,
+    role_api_token: RoleApiTokenProvider,
+) -> Generator[APIRequestContext, None, None]:
+    request_context = playwright.request.new_context(
+        base_url=api_base_url,
+        extra_http_headers={
+            "Authorization": f"Bearer {role_api_token('rop')}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        yield request_context
+    finally:
+        request_context.dispose()
+
+
+@pytest.fixture(scope="session")
 def browser_context_args(
     browser_context_args: dict[str, object],
 ) -> dict[str, object]:
@@ -130,9 +166,6 @@ def clean_login_page(page: Page) -> Generator[Page, None, None]:
 
 
 def _credentials_for_role(settings: Settings, role: str) -> tuple[str, str]:
-    if role == "superadmin":
-        return settings.superadmin_username, settings.superadmin_password
-
     credentials = settings.credentials_for(role)
     return credentials.username, credentials.password
 
@@ -142,6 +175,7 @@ def role_storage_state(
     browser: Browser,
     browser_context_args: dict[str, object],
     test_settings: Settings,
+    login_rate_guard: LoginRateGuard,
 ) -> RoleStorageStateProvider:
     """Ленивый session-кэш авторизованного состояния для каждой роли."""
     cached_states: dict[str, StorageState] = {}
@@ -162,6 +196,7 @@ def role_storage_state(
                 login_page = LoginPage(page)
 
                 login_page.open(test_settings.web_base_url)
+                login_rate_guard.before_attempt()
                 login_page.sign_in(username=username, password=password)
                 expected_url = (
                     f"{test_settings.web_base_url}{ROLE_START_PATHS[role]}"
@@ -178,6 +213,83 @@ def role_storage_state(
                 context.close()
 
     return get_storage_state
+
+
+@pytest.fixture
+def operator_draft() -> OperatorDraft:
+    unique_id = uuid4().hex
+    return OperatorDraft(
+        username=f"AT-{unique_id[:10]}",
+        password=f"AT!{unique_id[:12]}",
+        first_name=f"Auto{unique_id[:5]}",
+        last_name=f"Operator{unique_id[5:10]}",
+        phone=f"+99890{uuid4().int % 10_000_000:07d}",
+        pbx_extension=f"AT{unique_id[:6]}",
+        salary=1,
+        salary_day=date.today().isoformat(),
+    )
+
+
+@pytest.fixture
+def temporary_operator(
+    operator_draft: OperatorDraft,
+    rop_api_request: APIRequestContext,
+) -> Generator[TemporaryOperator, None, None]:
+    """Создаёт отдельного оператора на staging и всегда удаляет его."""
+    create_response = rop_api_request.post(
+        "/v1/operators",
+        data=operator_draft.api_payload(),
+    )
+    assert create_response.status == 200, (
+        "[temporary_operator setup] при создании оператора ожидали 200, "
+        f"получили {create_response.status}: {create_response.text()}"
+    )
+    created = create_response.json()
+    assert isinstance(created, dict), (
+        "[temporary_operator setup] ожидали JSON-объект оператора, "
+        f"получили {created!r}"
+    )
+    operator_id = created.get("id")
+    assert isinstance(operator_id, str) and operator_id, (
+        "[temporary_operator setup] ожидали непустой id оператора, "
+        f"получили {created!r}"
+    )
+    assert created.get("username") == operator_draft.username, (
+        "[temporary_operator setup] сервер вернул другого пользователя: "
+        f"ожидали username={operator_draft.username!r}, получили {created!r}"
+    )
+    assert created.get("role") == "operator", (
+        "[temporary_operator setup] ожидали role='operator', "
+        f"получили {created!r}"
+    )
+
+    operator = TemporaryOperator(
+        id=operator_id,
+        username=operator_draft.username,
+        password=operator_draft.password,
+        first_name=operator_draft.first_name,
+        last_name=operator_draft.last_name,
+        phone=operator_draft.phone,
+        pbx_extension=operator_draft.pbx_extension,
+        salary=operator_draft.salary,
+        salary_day=operator_draft.salary_day,
+        rop_request=rop_api_request,
+    )
+
+    try:
+        yield operator
+    finally:
+        delete_response = rop_api_request.delete(f"/v1/users/{operator_id}")
+        assert delete_response.status == 200, (
+            "[temporary_operator teardown] при удалении оператора "
+            f"ожидали 200, получили {delete_response.status}: "
+            f"{delete_response.text()}"
+        )
+        delete_body = delete_response.json()
+        assert delete_body.get("message") == "o'chirildi", (
+            "[temporary_operator teardown] ожидали "
+            f"message=\"o'chirildi\", получили {delete_body!r}"
+        )
 
 
 def _artifact_directory(node_id: str) -> Path:

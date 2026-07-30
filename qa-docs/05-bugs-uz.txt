@@ -95,7 +95,7 @@ BUG-002 | Kirish ekranida Super-adminning ishchi ma'lumotlari oldindan to'ldiril
 BUG-003 | Maydonlardagi matn vertikal markazda emas, yuqoriga siqilgan | Admin, turli formalar | P3 | Yangi
 BUG-004 | «Telefon» maydoni harf va istalgan matnni qabul qiladi | Admin, «ROP yaratish» formasi | P2 | Yangi
 BUG-005 | Yangi parol kiritiladigan formalarda parolni ko'rsatish tugmasi yo'q | Admin, turli formalar | P3 | Yangi
-BUG-006 | ROP deaktivatsiya qilingandan keyin uning ochiq sessiyasi tugamaydi | Admin, avtorizatsiya | P2 | Yangi
+BUG-006 | Deaktivatsiyadan keyin frontend sessiyasi tugamaydi: eski sahifa ochiq qoladi va qayta aktivatsiyadan so'ng yana ishlaydi | Admin, avtorizatsiya va deaktivatsiya | P2 | Yangi
 BUG-007 | Bitta telefon raqami bilan bir nechta ROP yaratish mumkin | Admin, ROP yaratish | P2 | Yangi
 BUG-008 | Tarif narxiga to'g'ri son kiritilganda «Invalid input» xatosi chiqqan | Admin, tariflar | P2 | Tuzatilgan, tekshiruv kutilmoqda
 BUG-009 | Gemini maxfiy kaliti xatolik paytida loglarga tushgan | Google Gemini integratsiyasi | P1 | Tuzatilgan, tekshiruv kutilmoqda
@@ -111,7 +111,15 @@ BUG-018 | Ish kunining boshlanish va tugash vaqti qo'ng'iroqlar navbatini chekla
 BUG-019 | Kirish formasi 6–7 belgili parolni yuboradi, API esa kamida 8 belgi talab qiladi | Admin, kirish ekrani | P2 | Yangi
 BUG-020 | Taqiqlangan to'g'ridan-to'g'ri havolalar «ruxsat yo'q» sahifasi o'rniga foydalanuvchini yo'naltiradi | Admin, RBAC | P2 | Yangi
 BUG-021 | Super-admin ROP operatorini API orqali o'zgartira oladi | Admin API, foydalanuvchilar RBAC | P1 | Yangi
-
+BUG-022 | Kirish urinishlari limitidan oshganda `rate limit exceeded` texnik xabari ko'rsatiladi | Admin, kirish ekrani va avtorizatsiya API si | P2 | Yangi
+BUG-023 | Band PBX extensionni yangi operator uchun tanlash mumkin | Admin, ROP, «Operator yaratish» formasi | P2 | Yangi
+BUG-024 | Operator kartochkasida biriktirilgan voronka ko'rsatilmaydi | Admin, ROP, Operator kartochkasi | P3 | Yangi
+BUG-025 | Tarmoq uzilganda «Qo'ng'iroqlar» bo'limi modul yuklash texnik xatosi bilan yiqiladi | Admin, Operator, «Qo'ng'iroqlar» bo'limi | P2 | Yangi
+BUG-026 | Operator kartochkasidagi qo'ng'iroq yozuvini ijro etish tugmasi ishlamaydi | Admin, ROP, Operator kartochkasi | P2 | Yangi
+BUG-027 | Tanlangan qo'ng'iroq sahifasi ma'lumotsiz ochiladi va yuklash xatosini ko'rsatadi | Admin, ROP, qo'ng'iroq tafsilotlari | P2 | Yangi
+BUG-028 | API istalgan tashqi origin uchun credentialed CORS so'rovlariga ruxsat beradi | Backend API, CORS | P2 | Yangi
+BUG-029 | Bitimlar SSE oqimi HTTP javobisiz osilib qoladi va realtime yangilanishlar kelmaydi | Admin, Operator, «Qo'ng'iroqlar» bo'limi | P2 | Yangi
+BUG-030 | Operatorni sekin saqlash vaqtida tushunarli yuklanish indikatori ko'rsatilmaydi | Admin, ROP, operatorni tahrirlash | P3 | Yangi
 
 YANGI BAG UCHUN SHABLON
 -----------------------
@@ -320,40 +328,50 @@ Qo'shimcha tekshiruv:
 4. Integratsiyalarning maxfiy maydonlarida bunday tugma kerak yoki kerak emasligini alohida aniqlashtiring.
 
 
-BUG-006. ROP deaktivatsiya qilingandan keyin ochiq sessiya tugamaydi
---------------------------------------------------------------------
+BUG-006. Foydalanuvchi deaktivatsiya qilingandan keyin ochiq frontend sessiyasi tugamaydi
+-------------------------------------------------------------------------------------------
 
-Web | Admin — kirish va foydalanuvchini deaktivatsiya qilish | production | ROP deaktivatsiya qilingandan keyin yangi kirish bloklanadi, lekin oldindan ochilgan sessiya yana taxminan 15 daqiqa ishlaydi.
+Web (Safari) / API | Admin — kirish va foydalanuvchini deaktivatsiya qilish | production (23.07.2026), stagingda tasdiqlandi (29.07.2026) | Backend deaktivatsiya qilingan sessiya so'rovlarini bloklaydi, ammo frontend sessiyani yopmaydi; qayta aktivatsiyadan keyin eski sahifa yangi kirishsiz yana ishlaydi.
 
-Muhimlik: P2, kirish nazorati muammosi
+Muhimlik: P2, sessiya butunlay tugamaydi va foydalanuvchi kirish sahifasiga qaytarilmaydi
 Holat: Yangi
 Sana: 23.07.2026
+Qayta tekshiruv: 29.07.2026
 
 Tavsif:
-Deaktivatsiya darhol ta'sir qilmaydi. ROP deaktivatsiyadan keyin yangi kirishga urinsa, tizim to'g'ri ravishda kirishni taqiqlaydi. Ammo foydalanuvchi oldindan kirgan bo'lsa, uning ochiq sessiyasi ishlashda davom etadi. Sahifalar ochiladi va amallar bajariladi. Kirish faqat taxminan 15 daqiqadan keyin tugaydi.
+Productiondagi dastlabki tekshiruvda deaktivatsiya qilingan ROP oldindan ochilgan sessiyada taxminan 15 daqiqagacha ishlashda davom etgan. Stagingda backend xatti-harakati yaxshilangan: deaktivatsiya qilingan operatorning access tokeni bilan yuborilgan himoyalangan so'rovlar darhol va 35 soniyadan keyin HTTP 401 hamda `Hisob faol emas` xabarini qaytaradi.
 
-Bu xavfsizlik muammosi: kirishi yopilgan xodim yana bir muddat ma'lumotlarni ko'rishi va o'zgartirishi mumkin.
+Ammo Safari frontend lokal sessiyani tugatmaydi va foydalanuvchini kirish sahifasiga yo'naltirmaydi. «Qo'ng'iroqlar» sahifasi ochiq qoladi. Operator qayta aktivatsiya qilingandan keyin ayni eski sahifa login va parolni qayta kiritmasdan yana ishlaydi. Demak, deaktivatsiya so'rovlarni vaqtincha bloklaydi, ammo mavjud sessiyani butunlay bekor qilmaydi.
+
+Bog'liq test: TC-013
 
 Qadamlar:
-1. ROP sifatida tizimga kiring va sahifani ochiq qoldiring.
-2. Boshqa brauzer yoki oynada Super-admin sifatida kirib, shu ROPni deaktivatsiya qiling.
-3. ROPning ochiq sahifasiga qayting va ishlashda davom eting.
+1. Stagingda Safari orqali test operatori sifatida kiring va «Qo'ng'iroqlar» bo'limini oching.
+2. Boshqa sessiyada shu operatorning ROP hisobiga kiring.
+3. `PATCH /v1/users/{id}` so'rovida `is_active=false` yuborib operatorni deaktivatsiya qiling.
+4. 45 soniya davomida operatorning ochiq sahifasini kuzating va himoyalangan so'rovni darhol hamda 35 soniyadan keyin yuboring.
+5. `PATCH /v1/users/{id}` so'rovida `is_active=true` yuborib operatorni qayta aktivatsiya qiling.
+6. Safarida qayta kirmasdan operatorning eski sahifasini tekshiring.
 
 Kutilgan natija:
-Deaktivatsiyadan keyin kirish darhol yoki bir necha soniya ichida tugaydi. Keyingi amalda foydalanuvchi tizimdan chiqariladi va ma'lumotlarni ko'ra yoki o'zgartira olmaydi.
+Keyingi himoyalangan so'rov yoki heartbeat paytida frontend lokal sessiyani tozalaydi va kirish sahifasini ochadi. Access token va refresh sessiyasi bekor qilinadi; foydalanuvchini keyin qayta aktivatsiya qilish eski sahifani tiklamaydi va yangi kirish talab qilinadi.
 
 Haqiqiy natija:
-Deaktivatsiya qilingan ROP taxminan 15 daqiqagacha ochiq sessiyada ishlashda davom etadi.
+1. Operatorning dastlabki kirishi va qo'ng'iroqlar tarixiga kirish HTTP 200 qaytardi.
+2. Deaktivatsiyadan keyin eski access token bilan himoyalangan so'rov darhol va 35 soniyadan keyin HTTP 401, `detail="Hisob faol emas"` qaytardi.
+3. Safari kirish sahifasini ochmadi: operator sahifasi ochiq qoldi.
+4. Qayta aktivatsiyadan keyin eski sahifa yangi kirishsiz ishlashda davom etdi.
+5. Stagingdagi dolzarb tekshiruv takrorlanishi: 1 ta urinishdan 1 tasi.
 
 Ilova:
-Yo'q.
+29.07.2026 kungi TC-013 API diagnostik chiqishi va Safari ochiq sahifasining qo'lda kuzatuvi. Tekshiruvdan keyin test operatori qayta aktivatsiya qilindi; nazorat kirishi HTTP 200 qaytardi.
 
 Qo'shimcha tekshiruv:
-1. Holatni stagingning dolzarb versiyasida takrorlang.
-2. ROP kirishi darhol tugashini tekshiring.
-3. Xuddi shu holatni Operator uchun tekshiring.
-4. Sahifalar o'rtasida o'tish bilan birga ma'lumotni o'zgartiradigan amallarni ham tekshiring.
-5. Kirish darhol tugashi kerakmi yoki 15 daqiqagacha kechikish ruxsat etiladimi, jamoa bilan aniqlashtiring.
+1. Frontend deaktivatsiya javobini qayta ishlashi kerak: access token va foydalanuvchi ma'lumotlarini tozalab, kirish sahifasini oching.
+2. HTTP 401 va 403 javoblarida sessiya bir xil tugashini tekshiring.
+3. Qayta aktivatsiya eski sahifani qayta jonlantirmasligi uchun deaktivatsiya paytida amaldagi access/refresh sessiyalarini bekor qiling.
+4. Ssenariyni Operator va ROP uchun Safari, Chrome va Firefox brauzerlarida alohida takrorlang.
+5. Deaktivatsiyadan keyin yangi bo'limlarni ochish, ma'lumotlarni o'zgartirish yoki oldindan yuklangan yopiq ma'lumotlarni ko'rishni davom ettirish mumkin emasligini tekshiring.
 
 
 BUG-007. Bitta telefon raqami bilan bir nechta ROP yaratish mumkin
@@ -904,3 +922,458 @@ Qo'shimcha tekshiruv:
 2. Super-admin uchun operator kartochkasi va ro'yxatini o'qish imkonini saqlang.
 3. ROP hanuz faqat o'z operatorlarini boshqara olishini tekshiring.
 4. Tuzatilgandan keyin TC-031 ni takrorlang va faqat `strict=True` bilan XPASS bo'lgandan so'ng `xfail` belgisini olib tashlang.
+
+
+BUG-022. Kirish urinishlari limitidan oshganda `rate limit exceeded` texnik xabari ko'rsatiladi
+------------------------------------------------------------------------------------------------
+
+Web / API | Admin — kirish ekrani va `POST /v1/auth/login` | staging | Oltinchi tezkor kirish urinishida API so'rovlar chastotasini cheklashni ishga tushiradi, ammo tushunarli lokalizatsiya qilingan xabar o'rniga inglizcha texnik matnni qaytaradi.
+
+Muhimlik: P2, foydalanuvchi vaqtincha kira olmaydi va sabab yoki kutish vaqtini tushunmaydi
+Holat: Yangi
+Sana: 29.07.2026
+
+Bog'liq test: TC-011
+
+Old shartlar:
+1. Tekshiruv faqat staging muhitida bajariladi.
+2. Shu IP manzildan boshqa kirish tekshiruvlari parallel bajarilmaydi.
+3. Tasodifiy mavjud bo'lmagan login va kamida 8 belgili parol ishlatiladi.
+
+Tavsif:
+Kirish cheklovi ishlaydi: noto'g'ri ma'lumotlar bilan yuborilgan beshta tezkor so'rov foydalanuvchi ma'lumotlarini tekshirish bosqichigacha o'tadi, oltinchi so'rov esa HTTP 429 bilan rad etiladi. Ammo API `detail` maydonida `rate limit exceeded` satrini qaytaradi. Frontend `detail` qiymatini lokalizatsiyasiz ko'rsatgani sababli foydalanuvchi inglizcha texnik matnni ko'radi va qachon qayta kirish mumkinligi haqida tushunarli ko'rsatma olmaydi. Bundan tashqari, javobda `Retry-After` HTTP sarlavhasi yo'q va JSON tana `Content-Type: text/plain; charset=utf-8` bilan qaytariladi.
+
+Qadamlar:
+1. Stagingdagi `POST /v1/auth/login` manziliga tasodifiy mavjud bo'lmagan login va kamida 8 belgili noto'g'ri parol bilan ketma-ket beshta so'rov yuboring.
+2. Beshta so'rovning har biri HTTP 401 va noto'g'ri ma'lumotlar haqidagi umumiy xatoni qaytarganini tekshiring.
+3. Shu ma'lumotlar bilan oltinchi so'rovni darhol yuboring.
+4. HTTP kodini, `Content-Type` va `Retry-After` sarlavhalarini hamda javob tanasi maydonlarini qayd eting.
+
+Kutilgan natija:
+Oltinchi so'rov HTTP 429 va tushunarli lokalizatsiya qilingan xabarni qaytaradi, masalan: «Muvaffaqiyatsiz urinishlar juda ko'p. 12 soniyadan keyin qayta urinib ko'ring». Javobdagi `Retry-After` va `retry_after_seconds` qiymatlari o'zaro mos bo'ladi, JSON esa `Content-Type: application/problem+json` bilan qaytariladi.
+
+Haqiqiy natija:
+1. 1–5-so'rovlar HTTP 401 va `detail="login yoki parol noto'g'ri"` qiymatini qaytardi.
+2. 6-so'rov HTTP 429, `title="Too Many Requests"`, `detail="rate limit exceeded"` va `retry_after_seconds=12` qiymatlarini qaytardi.
+3. `Retry-After` sarlavhasi yo'q.
+4. JSON tana bo'lishiga qaramay, javob `Content-Type: text/plain; charset=utf-8` bilan qaytdi.
+5. Takrorlanish: 1 ta ketma-ketlikdan 1 tasi.
+
+Ilova:
+29.07.2026 kuni yuborilgan oltita ketma-ket HTTP so'rovining diagnostik chiqishi. Tasodifiy mavjud bo'lmagan login ishlatilgan; foydalanuvchi ma'lumotlari o'zgartirilmagan.
+
+Qo'shimcha tekshiruv:
+1. Tuzatilgandan keyin TC-011 ni stagingda izolyatsiya qilingan IP manzildan alohida takrorlang.
+2. Rus va o'zbek tillaridagi lokalizatsiya qilingan xabarni tekshiring.
+3. Faol cheklov vaqtida to'g'ri ma'lumotlar bilan yuborilgan so'rov ham HTTP 429 qaytarishini tekshiring.
+4. `Retry-After` muddati tugagach, to'g'ri ma'lumotlar bilan muvaffaqiyatli kirishni tekshiring.
+5. Edge proxy ishonchli IP manzilini shakllantirishini va mijoz `X-Forwarded-For` qiymatini almashtirib cheklovni chetlab o'ta olmasligini tekshiring.
+
+
+BUG-023. Band PBX extensionni operator yaratishda tanlash mumkin
+----------------------------------------------------------------
+
+Web — Chromium | Admin — ROP, «Operator yaratish» formasi | staging | Ichki raqamlar ro'yxatidagi «занят» belgili qatorlar faol va bo'sh raqam kabi tanlanadi.
+
+Muhimlik: P2, forma boshqa operator raqamini tanlashga ruxsat beradi va foydalanuvchini server xatosigacha olib boradi
+Holat: Yangi
+Sana: 29.07.2026
+
+Bog'liq test: TC-054
+
+Tavsif:
+Stagingdagi OnlinePBX ro'yxatida uchta allaqachon biriktirilgan raqam bor edi. Uchala qator ham «занят» belgisiga ega, lekin o'chirilmagan. Band raqamlardan birini tanlash va uni yangi operator maydonining joriy qiymati qilish mumkin bo'ldi. Bo'sh raqamlar ham to'g'ri tanlanadi.
+
+Qadamlar:
+1. Stagingda ROP sifatida kiring va «Operator yaratish» formasini oching.
+2. «PBX extension (внутренний номер)» ro'yxatini oching.
+3. «занят» belgili qatorni toping.
+4. Qator faol ekanini tekshiring va uni tanlang.
+
+Kutilgan natija:
+Band va o'chirilgan raqamlar holatni tushuntirish uchun ko'rinadi, lekin tanlanmaydi. Faqat bo'sh va yoqilgan raqamni tanlash mumkin.
+
+Haqiqiy natija:
+Uchta band qatorning uchalasi ham faol edi. Band `104` raqami yangi operator maydoniga o'rnatildi.
+
+29.07.2026 kungi qo'lda qayta tekshiruv:
+Nuqson tasdiqlandi: `104 - Call Center · Занят` qatori tanlanadi va maydonga o'rnatiladi. Ilova qilingan skrinshotdagi formani yuborish urinishi band username ishlatilgani uchun `username allaqachon mavjud` javobini qaytardi; bu javob PBX server unikalligini tekshirmaydi va UI tekshiruvi natijasini o'zgartirmaydi. Band bo'lmagan raqam bilan forma operatorni muvaffaqiyatli yaratadi.
+
+Ilova:
+1. `test-results/batch-052-060/tc-054-busy-extension-selected.png` — lokal screenshot, Gitga qo'shilmaydi.
+2. `Снимок экрана — 2026-07-29 в 16.52.15.png` — band raqamni qo'lda tanlash.
+3. `Снимок экрана — 2026-07-29 в 16.53.19.png` — takroriy username bilan formani yuborish natijasi.
+
+Qo'shimcha tekshiruv:
+1. `assigned=true` bo'lganda optionni `enabled=false` kabi nofaol qiling.
+2. Band, o'chirilgan va bo'sh raqamlarni bir vaqtda tekshiring.
+3. Backend ichki raqam dublikatini hanuz taqiqlashini tekshiring.
+4. Tuzatilgandan keyin TC-052, TC-054 va TC-059 ni takrorlang.
+
+
+BUG-024. Operator kartochkasida biriktirilgan voronka ko'rsatilmaydi
+--------------------------------------------------------------------
+
+Web — Chromium / API | Admin — ROP, Operator kartochkasi | staging | Operatorda biriktirilgan voronka bor, lekin ism yonida «Воронка: …» belgisi yo'q.
+
+Muhimlik: P3, biriktirish ma'lumoti saqlangan, ammo kartochkada ko'rinmaydi
+Holat: Yangi
+Sana: 29.07.2026
+
+Bog'liq test: TC-060
+
+Tavsif:
+Tanlangan operator uchun `GET /v1/operator-pipelines?operator_id=...` bo'sh bo'lmagan `items` massivi va `pipeline_name` ni qaytaradi. Kartochka to'g'ri ism, telefon, ichki raqam, online holat, ish soatlari va qo'ng'iroq yozuvlarini ko'rsatadi, lekin «Воронка: …» belgisi yo'q. Frontend javobni massiv sifatida o'qib `data[0]` ni ishlatadi, haqiqiy kontrakt esa `{ items: [...] }` qaytaradi.
+
+Qadamlar:
+1. Stagingda ROP sifatida kiring.
+2. Voronka biriktirilgan va qo'ng'iroq yozuvi bor operatorni tanlang.
+3. `GET /v1/operator-pipelines?operator_id=<id>` bo'sh bo'lmagan `items` va `pipeline_name` qaytarishini API orqali tekshiring.
+4. Shu operator kartochkasini oching.
+5. Ism yonidagi voronka belgisini tekshiring.
+
+Kutilgan natija:
+Ism yonida API va biriktirish sozlamalariga mos «Воронка: <nom>» belgisi ko'rsatiladi.
+
+Haqiqiy natija:
+API biriktirishni qaytarsa ham voronka belgisi yo'q. Kartochkaning qolgan tekshirilgan bloklari ko'rsatiladi va Orqaga tugmasi ishlaydi.
+
+Ilova:
+1. 29.07.2026 kungi TC-060 UI/API tekshiruvining diagnostik chiqishi.
+2. `Снимок экрана — 2026-07-29 в 17.08.53.png` — Operator kartochkasini qo'lda tekshirish.
+
+29.07.2026 kungi qo'lda qayta tekshiruv:
+Nuqson `Soska` Operator kartochkasida tasdiqlandi. Ism yonida «Оффлайн» holati ko'rsatiladi, ammo biriktirilgan voronka belgisi yo'q. Kartochkaning boshqa asosiy bloklari yuklangan.
+
+Qo'shimcha tekshiruv:
+1. Frontend so'rov turini haqiqiy `{ items: [...] }` javobi bilan moslashtiring.
+2. Voronkasiz, bitta va bir nechta voronkali operatorlarni tekshiring.
+3. Boshqa operator yoki kompaniya voronkalari kartochkada chiqmasligini tekshiring.
+4. Tuzatilgandan keyin TC-060 ni takrorlang.
+
+
+BUG-025. Tarmoq uzilganda «Qo'ng'iroqlar» bo'limi texnik xato bilan yiqiladi
+------------------------------------------------------------------------------
+
+Web — Safari / Chromium | Admin — Operator, «Qo'ng'iroqlar» bo'limi | staging | Tarmoqsiz bo'limga o'tilganda ilova dinamik modulni yuklashda yiqiladi; faqat API ishlamaganda `Network Error` ko'rsatadi.
+
+Muhimlik: P2, bo'lim to'liq ishlamaydi va frontend buildining ichki tafsilotlarini ko'rsatadi
+Holat: Yangi
+Sana: 29.07.2026
+
+Bog'liq test: TC-091
+
+Tavsif:
+Tarmoq yo'qolishining ikkita ko'rinishi tasdiqlandi:
+
+1. Faqat bitimlar ro'yxati so'rovi ishlamaganda sahifa qobig'i saqlanadi, ammo kutilgan «Не удалось загрузить сделки» o'rniga `Network Error` chiqadi. Tarmoq tiklangach dastlabki to'rtta qator dublikatsiz qaytadi.
+2. Wi‑Fi to'liq o'chirilib, «Рабочий стол» dan «Звонки» ga o'tilganda ilova marshrutning lazy-modulini yuklay olmaydi va butun interfeysni `Unexpected Application Error!` ekrani bilan almashtiradi. Foydalanuvchi `TypeError: Failed to fetch dynamically imported module` va `/assets/` ichki fayl URLini ko'radi.
+
+Qadamlar:
+1. Stagingda Operator sifatida kiring va «Звонки» ni oching.
+2. Bitimlar jadvalda ko'rsatilganini tekshiring.
+3. «Рабочий стол» ga o'ting.
+4. Wi‑Fi ni to'liq o'chiring.
+5. Chap menyudan yana «Звонки» ni oching.
+6. Ilova holatini tekshiring.
+7. Tarmoqni yoqing, sahifani yangilang va qatorlar sonini boshlang'ich qiymat bilan solishtiring.
+
+Kutilgan natija:
+Tarmoqsiz holatda ilova qobig'i ishlashda davom etadi va «Не удалось загрузить сделки» lokalizatsiya qilingan xabari chiqadi. Ichki asset URLlari va texnik xato tafsilotlari ko'rsatilmaydi. Tarmoq tiklangach ro'yxat dublikatsiz qayta yuklanadi.
+
+Haqiqiy natija:
+Tarmoq to'liq yo'qolganda ilova `Unexpected Application Error!` va `Failed to fetch dynamically imported module` bilan yiqiladi. Faqat API ishlamaganda `Network Error` chiqadi. Tarmoq tiklanib, sahifa yangilangach dastlabki to'rtta bitim dublikatsiz qaytadi.
+
+Ilova:
+1. `test-results/batch-052-060/tc-091-network-error.png` — API ishlamagan variant, lokal screenshot.
+2. `Снимок экрана — 2026-07-29 в 17.28.47.png` — tarmoq to'liq o'chirilgan qo'lda tekshiruv.
+
+Qo'shimcha tekshiruv:
+1. Axios tarmoq xatolarini lokalizatsiya qilingan `errors.dealsLoadFailed` xabariga aylantiring.
+2. Marshrut dinamik import xatosi uchun foydalanuvchi fallbacki va qayta yuklash imkonini qo'shing.
+3. Tarmoq uzilganda oldindan yuklangan va hali yuklanmagan lazy-modulni tekshiring.
+4. Rus va o'zbek interfeyslarini tekshiring.
+5. SSE qayta ulanishi orqali qo'lda yangilamasdan tiklanishni tekshiring.
+6. Tuzatilgandan keyin TC-091 ni takrorlang.
+
+
+BUG-026. Operator kartochkasida qo'ng'iroq yozuvlari ijro etilmaydi
+-------------------------------------------------------------------
+
+Web — Safari / Chromium | Admin — ROP, Operator kartochkasi | staging | «Записи звонков» blokidagi ko'k Play tugmasi bosilganda audio boshlanmaydi.
+
+Muhimlik: P2, ROP yozuvni tinglab Operator suhbatini tekshira olmaydi
+Holat: Yangi
+Sana: 29.07.2026
+
+Bog'liq test: TC-370
+
+Tavsif:
+Operator kartochkasida qo'ng'iroq qatorlari, davomiylik, yo'nalish, waveform va ko'k ijro tugmasi ko'rinadi. Play bosilganda ovoz boshlanmaydi, tugma holati o'zgarmaydi va indikator `0:00 / 0:00` bo'lib qoladi.
+
+Qadamlar:
+1. Stagingda ROP sifatida kiring.
+2. «Операторы» bo'limidan `Soska` Operator kartochkasini oching.
+3. «Записи звонков» blokida waveform va ko'k Play tugmasi bor qatorni tanlang.
+4. Play tugmasini bosing va bir necha soniya kuting.
+5. Ovoz, tugma holati va vaqt indikatorini tekshiring.
+
+Kutilgan natija:
+Yozuv ijrosi boshlanadi, tugma Pause holatiga o'tadi, joriy pozitsiya va audioning umumiy davomiyligi to'g'ri ko'rsatiladi.
+
+Haqiqiy natija:
+Bosish yozuvni boshlamaydi. Ovoz yo'q, tugma Pause holatiga o'tmaydi, vaqt `0:00 / 0:00` bo'lib qoladi.
+
+30.07.2026 kungi avtomatik qayta tekshiruv:
+Nuqson Chromiumda TC-370 testi bilan takrorlandi. Play bosilgandan uch soniya o'tgach `audio` elementi `paused=true`, `currentTime=0`, `readyState=0` holatida qoldi va `MediaError.code=4` (`MEDIA_ERR_SRC_NOT_SUPPORTED`) qaytardi. Demak, muammo faqat Safari bilan cheklanmaydi.
+
+Ilova:
+1. `Снимок экрана — 2026-07-29 в 17.08.53.png` — qo'ng'iroq yozuvlari bloki.
+2. `Снимок экрана — 2026-07-29 в 17.09.55.png` — Play tugmasi.
+3. `autotests/tests/web/users/test_tc_370_operator_card_audio.py` avtomatik testi; screenshot va trace faqat diagnostik yiqilishda lokal saqlanadi.
+
+Qo'shimcha tekshiruv:
+1. Muammoli yozuvning `audio_url` / `download_url` manzili va formatini tekshiring.
+2. Audio fayl HTTP kodi, CORS va Safari format qo'llab-quvvatlashini tekshiring.
+3. Safari va Chromiumdagi ijroni solishtiring.
+4. Boshqa yozuvlar mustaqil ijro etilishini va bir vaqtda faqat bittasi o'ynashini tekshiring.
+
+
+BUG-027. Tanlangan qo'ng'iroq sahifasi ma'lumotsiz ochiladi
+-----------------------------------------------------------
+
+Web — Safari / Chromium | Admin — ROP, qo'ng'iroq tafsilotlari | staging | Operator kartochkasidan o'tilganda «Транскрипт звонка» ochiladi, ammo tanlangan qo'ng'iroq ma'lumotlari yuklanmaydi.
+
+Muhimlik: P2, ROP muayyan qo'ng'iroq ma'lumoti, yozuvi va transkriptini ocha olmaydi
+Holat: Yangi
+Sana: 29.07.2026
+
+Bog'liq test: TC-060
+
+Tavsif:
+Operator kartochkasidagi qo'ng'iroq qatori bosilganda alohida «Транскрипт звонка» sahifasi ochiladi. Undagi «Событие», «Направление», «Звонящий», «Принимающий», «Длительность» va «Время» maydonlari `-` ni ko'rsatadi. «Не удалось загрузить данные звонка» ogohlantirishi chiqadi, audio `0:00`, transkript esa yo'q.
+
+Qadamlar:
+1. Stagingda ROP sifatida kiring.
+2. `Soska` Operator kartochkasini oching.
+3. «Записи звонков» blokida qo'ng'iroq qatorini, masalan ko'rsatilgan raqamni bosing.
+4. «Транскрипт звонка» sahifasi ochilishini kuting.
+5. Ma'lumot kartochkasi, audiopleyer va «Разговор» blokini tekshiring.
+
+Kutilgan natija:
+Aynan tanlangan qo'ng'iroq ochiladi. Uning ishtirokchilari, yo'nalishi, davomiyligi, vaqti, mavjud audio yozuvi va mavjud transkript yoki tahlilning tushunarli holati ko'rsatiladi.
+
+Haqiqiy natija:
+Barcha asosiy maydonlarda `-` bor. «Не удалось загрузить данные звонка» ko'rsatiladi, audio davomiyligi `0:00`, «Разговор» blokida esa «Транскрипт пока отсутствует» yozilgan.
+
+30.07.2026 kungi avtomatik qayta tekshiruv:
+Nuqson Chromiumda `deal_id` qiymati yo'q qo'ng'iroqda takrorlandi. To'g'ridan-to'g'ri `GET /v1/onlinepbx/events/{event_id}` saqlangan hodisani qaytaradi, ammo Operator kartochkasidan o'tishda URL `deal_id` o'rniga `event_id` bilan tuziladi. Noto'g'ri filtrlangan keyingi ro'yxat so'rovi HTTP 404 oladi va qo'ng'iroq ma'lumotlari ko'rsatilmaydi.
+
+Ilova:
+1. `Снимок экрана — 2026-07-29 в 17.10.39.png` — tanlangan qo'ng'iroq qatori.
+2. `Снимок экрана — 2026-07-29 в 17.11.18.png` — yuklash xatosi bilan bo'sh tafsilotlar sahifasi.
+3. `autotests/tests/web/users/test_tc_060_call_details.py` avtomatik testi; failure-only screenshot va trace lokal saqlanadi.
+
+Qo'shimcha tekshiruv:
+1. Operator kartochkasidan o'tishda qaysi `event_id` va `deal_id` yuborilishini tekshiring.
+2. Marshrut identifikatorini qo'ng'iroq tafsilotlari API so'rovi bilan solishtiring.
+3. `deal_id` bor va yo'q qo'ng'iroqlarni, kiruvchi va chiquvchi yozuvlarni tekshiring.
+4. Tuzatilgandan keyin «Назад», audio ijrosi va tahlilni boshlashni tekshiring.
+
+
+BUG-028. API istalgan tashqi origin uchun credentialed CORS so'rovlariga ruxsat beradi
+----------------------------------------------------------------------------------------
+
+API / Web — CORS | Backend API | staging | Noma'lum tashqi origin credentials bilan APIga murojaat qilish ruxsatini oladi.
+
+Muhimlik: P2, xavfsizlik konfiguratsiyasi ishonchli saytlar ro'yxatini kengaytiradi; amaldagi tokensiz ma'lumot olish tasdiqlanmagan
+Holat: Yangi
+Sana: 30.07.2026
+
+Bog'liq test: TC-400
+
+Tavsif:
+Backend ixtiyoriy `Origin` sarlavhasi qiymatini
+`Access-Control-Allow-Origin` javobiga qaytaradi va bir vaqtda
+`Access-Control-Allow-Credentials: true` ni yuboradi. Shu sababli brauzer
+noma'lum saytni Operator AI API uchun ruxsat berilgan CORS manbasi deb qabul
+qiladi.
+
+Access tokenning browser storageda saqlanishi va refresh-cookie uchun
+`SameSite=Strict` ishlatilishi oddiy tashqi saytdan hujum qilish ehtimolini
+kamaytiradi. Shunga qaramay, server allowlisti amalda ishlamayapti. Amaldagi
+bearer token yoki boshqa mos shart mavjud bo'lsa, begona origin himoyalangan
+API javobini o'qiy oladi. Ushbu tekshiruv tokensiz to'liq ma'lumot o'g'irlashni
+isbotlamaydi.
+
+Qadamlar:
+1. Stagingda `OPTIONS /v1/auth/me` preflight so'rovini yuboring.
+2. `Origin: https://untrusted.invalid` sarlavhasini yuboring.
+3. `Access-Control-Request-Method: GET` sarlavhasini yuboring.
+4. `Access-Control-Request-Headers: authorization` sarlavhasini yuboring.
+5. HTTP kodini va barcha `Access-Control-Allow-*` sarlavhalarini tekshiring.
+6. Avtotestda test bearer token bilan xavfsiz `GET /v1/auth/me` so'rovini shu
+   noma'lum origin uchun takrorlang.
+
+Kutilgan natija:
+Noma'lum origin allowlistda yo'q va `Access-Control-Allow-Origin` yoki
+`Access-Control-Allow-Credentials` sarlavhalarini olmaydi. Ruxsat beruvchi
+sarlavhalar faqat kelishilgan Admin va boshqa rasmiy API mijozlari uchun
+qaytariladi.
+
+Haqiqiy natija:
+Qo'lda yuborilgan preflight HTTP 204 va quyidagi sarlavhalarni qaytardi:
+
+`Access-Control-Allow-Origin: https://untrusted.invalid`
+`Access-Control-Allow-Credentials: true`
+`Access-Control-Allow-Headers: Content-Type,Authorization,X-Request-Id`
+`Access-Control-Allow-Methods: GET,POST,PUT,PATCH,DELETE,OPTIONS`
+
+Avtotest test bearer token bilan himoyalangan `GET /v1/auth/me` so'rovi
+noma'lum origin uchun HTTP 200 va shu ruxsat beruvchi CORS sarlavhalarini
+qaytarishini tasdiqladi. Himoyalangan javob tanasi va token hisobotga
+chiqarilmadi.
+
+Ilova:
+1. 30.07.2026 kungi qo'lda olingan `curl` natijasi, request ID:
+   `iIJjdrzPlTLYxfZSGArPTYhIzifperxN`.
+2. `autotests/tests/api/operations/test_tc_400_cors.py` avtotesti; maxfiy
+   ma'lumotlar va himoyalangan javob tanasi ataylab saqlanmaydi.
+
+Qo'shimcha tekshiruv:
+1. `HTTP_CORS_ORIGINS` dagi wildcard/origin aks ettirishni aniq kelishilgan
+   allowlist bilan almashtiring.
+2. Ruxsat berilgan Admin/Landing originlarini va oddiy tashqi domen rad
+   etilishini tekshiring.
+3. Shu sitening noma'lum subdomenini credentials bilan alohida tekshiring.
+4. Production ma'lumotlarini o'zgartirmasdan staging va production
+   konfiguratsiyalarini solishtiring.
+5. Tuzatilgandan keyin TC-400 ni preflight va haqiqiy himoyalangan GET uchun
+   takrorlang.
+
+
+BUG-029. Bitimlar SSE oqimi HTTP javobisiz osilib qoladi va realtime yangilanishlar kelmaydi
+------------------------------------------------------------------------------------------------
+
+Web — Safari / Chromium / API | Admin — Operator, «Qo'ng'iroqlar» bo'limi | staging | `GET /v1/amocrm/deals/stream` kutish holatida qoladi va SSE hodisalarini uzatishni boshlamaydi.
+
+Muhimlik: P2, jadval oddiy REST so'rovi bilan yuklanadi, ammo o'zgarishlar real vaqtda kelmaydi; vaqtinchalik yechim — sahifani yangilash
+Holat: Yangi
+Sana: 30.07.2026
+
+Bog'liq test: TC-382
+
+Tavsif:
+Operator «Qo'ng'iroqlar» bo'limini ochganda frontend
+`Accept: text/event-stream` bilan
+`GET /v1/amocrm/deals/stream?page=1&perPage=30` ni ishga tushiradi. So'rov
+kutish holatida qoladi, ammo HTTP status, sarlavhalar yoki birinchi hodisani
+olmaydi.
+
+Backend shartnomasi joriy bitimlar sahifasi bilan darhol `event: snapshot`
+yuborishni va har 25 soniyada keepalive berishni nazarda tutadi. Oddiy REST
+jadvali yuklanadi, shuning uchun foydalanuvchi dastlabki qatorlarni ko'radi,
+ammo keyingi o'zgarishlar sahifani yangilamasdan realtime oqim orqali kelmaydi.
+Ehtimoliy sabab reverse proxydagi buffering/flush bo'lishi mumkin, ammo
+OpenRestyning tashqi konfiguratsiyasi mavjud repozitoriylarda yo'q va DevOps
+tekshiruvini talab qiladi.
+
+Qadamlar:
+1. Stagingda Operator sifatida kiring.
+2. Safari Web Inspector → Network ni oching.
+3. «Qo'ng'iroqlar» bo'limiga o'ting.
+4. `amocrm/deals/stream` so'rovini toping.
+5. Preview/Headers ni ochib, 30 soniyadan ko'proq kuting.
+6. HTTP status, `Content-Type` va olingan SSE hodisalarini tekshiring.
+
+Kutilgan natija:
+So'rov darhol HTTP 200 va `Content-Type: text/event-stream` oladi. Oqimda
+boshlang'ich `event: snapshot` paydo bo'ladi; 25 soniyadan kechiktirmay
+keepalive keladi. Ulanish ochiq qoladi va o'zgarishlarda yangi snapshotlarni
+uzatadi.
+
+Haqiqiy natija:
+Safarida `stream` so'rovi yuklanish indikatorini ko'rsatishda davom etadi,
+Preview bo'sh qoladi, status/sarlavhalar va SSE hodisalari 30 soniyadan ko'proq
+kutgandan keyin ham paydo bo'lmaydi.
+
+Chromium avtotesti ham 30 soniyada HTTP response hodisasini olmadi. Alohida
+to'g'ridan-to'g'ri avtorizatsiyalangan HTTP so'rovi status line kelishidan oldin
+35 soniyada timeout bilan tugadi. Token va bitim ma'lumotlari diagnostik
+chiqishga yozilmadi.
+
+Ilova:
+1. `Снимок экрана — 2026-07-30 в 13.46.06.png` — Safari Network: `stream`
+   so'rovi tanlangan, Preview bo'sh va yuklanish davom etmoqda.
+2. `autotests/tests/web/auth/test_tc_382_logout_stream_cleanup.py` avtotesti;
+   trace faqat diagnostik yiqilishda lokal saqlanadi.
+
+Qo'shimcha tekshiruv:
+1. SSE uchun OpenResty/Nginx sozlamalarini tekshiring: buffering, gzip, flush va
+   `proxy_read_timeout`.
+2. Initial snapshot darhol yuborilishini va joriy proxy uchun kerak bo'lsa
+   `X-Accel-Buffering: no` sarlavhasini tekshiring.
+3. Oqim tiklangach, bitim o'zgarganidan keyingi snapshot va dublikatlar
+   yo'qligini tekshiring.
+4. Ikkinchi SSE endpoint `/v1/onlinepbx/events/stream` ni tekshiring.
+5. TC-382 ning qolgan qismini takrorlang: logout oqimni yopadi, yangi oqim
+   boshlanmaydi, Back/reload kabinet ma'lumotlarini qaytarmaydi.
+
+
+BUG-030. Operatorni sekin saqlash vaqtida tushunarli yuklanish indikatori ko'rsatilmaydi
+---------------------------------------------------------------------------------------
+
+Web — Chromium | Admin — ROP, operatorni tahrirlash | staging | Sekin `PATCH /v1/users/{id}` vaqtida tugma bloklanadi, ammo interfeys saqlash davom etayotganini tushuntirmaydi.
+
+Muhimlik: P3, ma'lumotlar to'g'ri saqlanadi va takroriy so'rov yuborilmaydi, ammo sekin tarmoqda foydalanuvchi amal bajarilayotganini tushunmaydi
+Holat: Yangi
+Sana: 30.07.2026
+
+Bog'liq test: TC-379
+
+Tavsif:
+Operator tahrirlanganda frontend API javobi kelguncha «Saqlash» tugmasini
+bloklaydi. Ammo tugma matni o'zgarmaydi, spinner yo'q, forma va tugmada
+`aria-busy` accessibility belgisi mavjud emas.
+
+Tez tarmoqda bu holat deyarli sezilmaydi. Javob 10–20 soniyaga sun'iy
+kechiktirilganda foydalanuvchi faqat kulrang tugmani ko'radi va so'rov hali
+bajarilayotganini aniq tushunmaydi.
+
+Qadamlar:
+1. Stagingga ROP sifatida kiring.
+2. «Operatorlar» bo'limini oching.
+3. Test operatori qatoridagi tahrirlash belgisini bosing.
+4. Ism kabi xavfsiz maydonni o'zgartiring.
+5. Tarmoq tezligini cheklang yoki `PATCH /v1/users/{id}` javobini
+   10–20 soniyaga kechiktiring.
+6. «Saqlash» tugmasini bosing va javob kelguncha formani kuzating.
+
+Kutilgan natija:
+So'rov davomida interfeys saqlash jarayonini aniq ko'rsatadi: masalan, spinner,
+«Saqlanmoqda…» matni yoki boshqa tushunarli vizual holat. Screen reader uchun
+`aria-busy` yoki teng qiymatli xabar mavjud. Takroriy bosish ikkinchi so'rovni
+yubormaydi.
+
+Haqiqiy natija:
+«Saqlash» tugmasi kulrang va faol bo'lmagan holatga o'tadi, ammo avvalgi matn
+saqlanib qoladi. Spinner, saqlash xabari va `aria-busy` yo'q. 20 soniyalik
+kechikish bilan qo'lda tekshiruvda foydalanuvchi faqat kulrang tugmani ko'rdi.
+
+Funksional qism to'g'ri ishlaydi: aynan bitta `PATCH` yuboriladi, API HTTP 200
+javob beradi, javobdan keyin muvaffaqiyat xabari ko'rinadi va jadvaldagi yangi
+qiymat API orqali qayta o'qilgan ma'lumot bilan mos keladi.
+
+Ilova:
+1. 30.07.2026 kuni ko'rinadigan Chromiumda 20 soniyalik javob kechikishi bilan
+   qo'lda tekshiruv.
+2. `autotests/tests/web/users/test_tc_379_slow_network.py` avtotesti; trace
+   faqat yiqilishda lokal saqlanadi.
+
+Qo'shimcha tekshiruv:
+1. O'zgartiruvchi formalardagi tugmalar uchun yagona kutish indikatorini
+   qo'shing.
+2. Tugma so'rov tugaguncha faol bo'lmasligini tekshiring.
+3. Takroriy bosishda faqat bitta `PATCH` yuborilishini tekshiring.
+4. Yuklanish holati screen reader tomonidan e'lon qilinishini tekshiring.
+5. Tuzatilgandan keyin TC-379 ni 2,5 va 20 soniyalik kechikishlarda takrorlang.

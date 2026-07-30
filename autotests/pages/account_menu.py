@@ -16,12 +16,20 @@ class AccountMenu:
             name="Выйти",
             exact=True,
         )
+        self.change_password_button = page.get_by_role(
+            "button",
+            name="Сменить пароль",
+            exact=True,
+        )
 
     def open(self) -> None:
         self.account_button.click()
 
     def logout(self) -> None:
         self.logout_button.click()
+
+    def open_change_password(self) -> None:
+        self.change_password_button.click()
 
     def go_back(self) -> None:
         self.page.go_back()

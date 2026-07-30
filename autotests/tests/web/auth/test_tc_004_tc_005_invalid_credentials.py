@@ -52,13 +52,14 @@ def test_invalid_credentials_rejected_without_account_disclosure(
     """
     login_page = LoginPage(clean_login_page)
     case_prefix = f"[{case.case_id}]"
+    existing_credentials = test_settings.credentials_for("rop")
     username = (
-        test_settings.superadmin_username
+        existing_credentials.username
         if case.existing_username
         else f"AT-{uuid4().hex[:8]}"
     )
     password = (
-        f"{test_settings.superadmin_password}x"
+        f"{existing_credentials.password}x"
         if case.existing_username
         else f"AT-{uuid4().hex}"
     )

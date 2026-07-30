@@ -26,9 +26,9 @@ class Credentials:
 class Settings:
     target_env: str
     web_base_url: str
-    superadmin_username: str
-    superadmin_password: str
     api_base_url: str = ""
+    superadmin_username: str = ""
+    superadmin_password: str = ""
     rop_username: str = ""
     rop_password: str = ""
     operator_username: str = ""
@@ -41,10 +41,10 @@ class Settings:
         required_names = (
             "OPERATOR_AI_TARGET_ENV",
             "OPERATOR_AI_WEB_BASE_URL",
-            "OPERATOR_AI_SUPERADMIN_USERNAME",
-            "OPERATOR_AI_SUPERADMIN_PASSWORD",
         )
         role_names = (
+            "OPERATOR_AI_SUPERADMIN_USERNAME",
+            "OPERATOR_AI_SUPERADMIN_PASSWORD",
             "OPERATOR_AI_ROP_USERNAME",
             "OPERATOR_AI_ROP_PASSWORD",
             "OPERATOR_AI_OPERATOR_USERNAME",
@@ -124,6 +124,12 @@ class Settings:
 
     def credentials_for(self, role: str) -> Credentials:
         role_settings = {
+            "superadmin": (
+                self.superadmin_username,
+                self.superadmin_password,
+                "OPERATOR_AI_SUPERADMIN_USERNAME",
+                "OPERATOR_AI_SUPERADMIN_PASSWORD",
+            ),
             "rop": (
                 self.rop_username,
                 self.rop_password,

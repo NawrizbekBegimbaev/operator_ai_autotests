@@ -73,11 +73,12 @@ def test_tc_010_logout_blocks_back_navigation_and_reload(
     login_page = LoginPage(clean_login_page)
     rop_list_page = RopListPage(clean_login_page)
     account_menu = AccountMenu(clean_login_page)
+    credentials = test_settings.credentials_for("superadmin")
 
     login_page.open(test_settings.web_base_url)
     login_page.sign_in(
-        username=test_settings.superadmin_username,
-        password=test_settings.superadmin_password,
+        username=credentials.username,
+        password=credentials.password,
     )
     expect(
         clean_login_page,
