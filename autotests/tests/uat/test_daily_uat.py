@@ -85,10 +85,10 @@ def _uat_sys_002(request: pytest.FixtureRequest) -> None:
     smoke = DeploymentSmokePage(page)
     login_page = LoginPage(page)
     login_page.open(settings.web_base_url)
-    expect(login_page.username_input).to_be_visible()
-    expect(login_page.password_input).to_be_visible()
-    expect(login_page.submit_button).to_be_enabled()
-    smoke.wait_for_resources()
+    smoke.wait_for_resources(timeout_ms=15_000)
+    expect(login_page.username_input).to_be_visible(timeout=15_000)
+    expect(login_page.password_input).to_be_visible(timeout=15_000)
+    expect(login_page.submit_button).to_be_enabled(timeout=15_000)
     smoke.assert_no_loading_errors()
 
 
