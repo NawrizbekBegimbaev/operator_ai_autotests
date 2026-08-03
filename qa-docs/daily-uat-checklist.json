@@ -4,11 +4,12 @@
   "status": "approved_implementation_in_progress",
   "implementation": {
     "pytest_items": 33,
-    "implemented_handlers": 13,
-    "runnable_with_current_environment": 12,
-    "blocked_by_known_defect": 6,
-    "pending_external_setup_or_handler": 14,
-    "not_executed_in_latest_run": 15,
+    "implemented_handlers": 20,
+    "runnable_with_current_environment": 18,
+    "blocked_by_known_defect": 7,
+    "pending_external_setup_or_handler": 8,
+    "not_executed_in_latest_run": 8,
+    "latest_verified_run": "18/18 запущенных прошли; 8 не готовы к запуску; 7 заблокированы дефектами; 4 мин 16 сек",
     "marker": "daily_uat",
     "isolated_results_default": "uat-results/<Asia-Tashkent timestamp>",
     "telegram_delivery": "implemented; activation requires TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID",
@@ -32,25 +33,25 @@
   },
   "budget": {
     "total_scenarios": 33,
-    "planned_checkable": 27,
-    "blocked_by_known_defect": 6,
+    "planned_checkable": 26,
+    "blocked_by_known_defect": 7,
     "ui_scenarios": 29,
     "hybrid_ui_api_scenarios": 3,
     "api_scenarios": 1,
-    "estimated_checkable_seconds": 1320,
-    "estimated_checkable_human": "22 мин 00 сек",
+    "estimated_checkable_seconds": 1230,
+    "estimated_checkable_human": "20 мин 30 сек",
     "estimated_after_all_defect_fixes_seconds": 1720,
     "estimated_after_all_defect_fixes_human": "28 мин 40 сек"
   },
   "activation_gates": [
     "Подтвердить SHA Backend, Admin и Landing, реально развёрнутые на staging.",
     "Определить правильную стартовую страницу Оператора: /dashboard/home или /dashboard/calls.",
-    "Выделить отдельную тестовую AmoCRM-воронку с разрешённым созданием и очисткой лидов.",
+    "Исправить BUG-046: повторная синхронизация действующей AmoCRM должна возвращать 200.",
+    "Добавить staging-only fixture API для создания и полного удаления лидов, call state и AI session.",
     "Выделить тестовый OnlinePBX extension и безопасный номер; согласовать максимум один реальный звонок на прогон.",
     "Подтвердить доступную квоту Gemini и подготовить согласованное тестовое аудио без персональных данных.",
     "Для demo-заявки предоставить удаляемый тестовый канал либо disposable Google Sheet; без cleanup сценарий не активируется.",
-    "Разрешить последовательное изменение одного staging-тарифа с обязательным восстановлением исходных значений.",
-    "Перепроверить статусы BUG-014, BUG-017, BUG-024, BUG-026, BUG-027, BUG-029, BUG-038 и BUG-045."
+    "Перепроверить статусы BUG-014, BUG-017, BUG-024, BUG-026, BUG-027, BUG-029, BUG-038, BUG-045 и BUG-046."
   ],
   "scenarios": [
     {
@@ -219,65 +220,62 @@
       "role": "Super-admin",
       "layer": "ui",
       "screen": "Подключение AmoCRM",
-      "scenario": "Super-admin подключает тестовую AmoCRM и синхронизирует её структуру",
+      "scenario": "Подключённая staging AmoCRM повторно синхронизирует свою структуру",
       "steps": [
-        "Создать временного ROP.",
-        "Открыть подключение AmoCRM и ввести выделенные тестовые реквизиты из защищённого окружения.",
-        "Дождаться успешного подключения и синхронизации.",
+        "В Admin открыть выделенного staging ROP и подтвердить активное подключение AmoCRM.",
+        "От имени этого ROP запустить повторную синхронизацию структуры.",
         "Проверить появление воронок, статусов и группы полей Operator AI.",
-        "Удалить тестовую конфигурацию и временного ROP."
+        "Открыть Правила ROP и сверить выбранную воронку, статусы и поля."
       ],
-      "expected_result": "Подключение показывается рабочим; структура тестовой AmoCRM загружена и доступна только созданной компании.",
+      "expected_result": "Подключение показывается рабочим; повторная синхронизация завершается успешно, а актуальная структура AmoCRM видна ROP.",
       "priority": "P0",
       "estimated_seconds": 90,
-      "execution_state": "planned",
-      "automation_state": "new",
+      "execution_state": "blocked_defect",
+      "blocked_by": ["BUG-046"],
+      "automation_state": "implemented_strict_guard",
       "source_cases": ["TC-166", "TC-172", "TC-173", "TC-175"],
-      "activation_gate": "Нужен отдельный тестовый AmoCRM-аккаунт, допускающий ежедневное подключение и отключение.",
-      "cleanup": "Удалить конфигурацию до удаления временного ROP; не печатать секреты."
+      "activation_gate": "Снять блокировку только после строгого XPASS отдельного guard BUG-046.",
+      "cleanup": "Не требуется: штатная синхронизация обновляет локальное зеркало; секреты не печатаются."
     },
     {
       "id": "UAT-SA-004",
       "role": "Super-admin",
       "layer": "ui",
       "screen": "Подключение OnlinePBX",
-      "scenario": "Super-admin подключает тестовый OnlinePBX и получает список внутренних номеров",
+      "scenario": "Подключённый staging OnlinePBX возвращает список внутренних номеров",
       "steps": [
-        "Создать временного ROP.",
-        "Открыть подключение OnlinePBX и ввести выделенные тестовые Domain/API key.",
-        "Дождаться сообщения об успешном подключении.",
-        "Открыть создание Оператора и проверить доступный тестовый extension.",
-        "Удалить конфигурацию и временного ROP."
+        "В Admin открыть выделенного staging ROP и подтвердить подключение OnlinePBX.",
+        "От имени ROP запросить активные внутренние номера.",
+        "Открыть создание Оператора и проверить, что один из полученных extension доступен в списке.",
+        "Закрыть форму без создания пользователя."
       ],
-      "expected_result": "Интеграция сохраняется, показывается подключённой и возвращает разрешённые внутренние номера без технической ошибки.",
+      "expected_result": "Интеграция показывается подключённой и возвращает активные внутренние номера без технической ошибки.",
       "priority": "P0",
       "estimated_seconds": 60,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-200"],
-      "activation_gate": "Нужен отдельный тестовый OnlinePBX tenant/key, который можно подключать ежедневно.",
-      "cleanup": "Удалить только временную конфигурацию; секреты не сохранять в артефактах."
+      "cleanup": "Не требуется: конфигурация и номера только читаются; секреты не сохраняются в артефактах."
     },
     {
       "id": "UAT-SA-005",
       "role": "Super-admin",
       "layer": "ui",
       "screen": "Тарифы Admin и Landing",
-      "scenario": "Super-admin редактирует тестовый тариф, а Landing показывает новое значение",
+      "scenario": "Super-admin редактирует staging-тариф, а публичный источник Landing показывает новое значение",
       "steps": [
         "Записать исходные значения согласованного staging-тарифа.",
         "Изменить название, цену, описание и возможности с UAT-префиксом.",
         "Сохранить и обновить Admin.",
-        "Обновить Landing и сверить карточку.",
-        "Восстановить исходные значения и повторно сверить обе страницы."
+        "Запросить публичный источник тарифов Landing и сверить опубликованное значение.",
+        "Восстановить исходные значения и повторно сверить Admin/API."
       ],
-      "expected_result": "Изменение видно в Admin и Landing после обновления; код тарифа и другие тарифы не меняются; исходные значения восстановлены.",
+      "expected_result": "Изменение видно в Admin и публичном источнике Landing; код тарифа и другие тарифы не меняются; исходные значения восстановлены.",
       "priority": "P2",
       "estimated_seconds": 60,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-227", "TC-229", "TC-230", "TC-231"],
-      "activation_gate": "Нужно разрешение на последовательное изменение одного staging-тарифа.",
       "cleanup": "Восстановить все исходные поля в finally и подтвердить через UI/API."
     },
     {
@@ -285,21 +283,19 @@
       "role": "Super-admin",
       "layer": "ui",
       "screen": "Создание ROP и функции тарифа",
-      "scenario": "Каждый тариф сохраняется у ROP и открывает предусмотренную положительную функцию",
+      "scenario": "Super-admin создаёт по одному временному ROP с каждым активным тарифом",
       "steps": [
-        "Создать три временных ROP с тремя действующими тарифами.",
-        "Для тарифа Аналитика открыть доступную аналитику.",
-        "Для тарифа Аналитика + Автозвонок открыть аналитику и режим обзвона.",
-        "Для Full AI открыть полный AI-путь до готового тестового результата.",
-        "Удалить временные компании."
+        "Сверить, что активны три фиксированных тарифа.",
+        "Через UI последовательно выбрать каждый тариф и создать временного ROP.",
+        "Для каждого запроса сверить отправленный код тарифа и успешное создание компании.",
+        "Удалить три временные компании по точным ID."
       ],
-      "expected_result": "У каждого ROP сохранён выбранный тариф; все разрешённые для него функции открываются без сообщения о тарифном ограничении.",
+      "expected_result": "Все три активных тарифа доступны для выбора; сервер принимает правильный код и создаёт ровно одного ROP для каждого варианта.",
       "priority": "P1",
       "estimated_seconds": 80,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-247", "TC-249", "TC-250", "TC-251"],
-      "activation_gate": "Нужны тестовые данные для трёх временных компаний; запрещённые функции не проверяются в этом happy-path.",
       "cleanup": "Удалить временных операторов и ROP; не менять фиксированные тарифы."
     },
     {
@@ -359,7 +355,7 @@
       "priority": "P0",
       "estimated_seconds": 55,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-362", "TC-363"],
       "cleanup": "Вернуть назначения и удалить временного Оператора."
     },
@@ -380,7 +376,7 @@
       "priority": "P1",
       "estimated_seconds": 100,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-358", "TC-359", "TC-360", "TC-361", "TC-354"],
       "cleanup": "Восстановить три изменённых значения в finally."
     },
@@ -401,7 +397,7 @@
       "priority": "P1",
       "estimated_seconds": 45,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-110"],
       "cleanup": "Восстановить исходные критерии и проверить reload."
     },

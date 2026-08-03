@@ -27,11 +27,14 @@ def test_uat_report_keeps_three_header_numbers_and_hides_traceback(
     report = build_report(junit, pytest_returncode=1)
     text = render_human_report(report)
     assert report.passed == 1
-    assert report.checkable == 27
-    assert report.blocked_defect == 6
+    assert report.launched == 2
+    assert report.not_ready == 24
+    assert report.checkable == 26
+    assert report.blocked_defect == 7
     assert report.total == 33
-    assert "Пройдено: 1 из 27 проверяемых" in text
-    assert "ещё 6 заблокировано дефектом" in text
+    assert "Пройдено: 1 из 2 запущенных" in text
+    assert "24 не готово к запуску" in text
+    assert "7 заблокировано дефектом" in text
     assert "всего в чеклисте: 33" in text
     assert "Форма входа не видна" in text
     assert "SECRET TRACEBACK" not in text

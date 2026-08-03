@@ -42,6 +42,8 @@ class CaseOutcome:
 class RoleOutcome:
     role: str
     passed: int
+    launched: int
+    not_ready: int
     checkable: int
     total: int
 
@@ -51,6 +53,8 @@ class UATReport:
     generated_at: str
     status: str
     passed: int
+    launched: int
+    not_ready: int
     checkable: int
     blocked_defect: int
     total: int
@@ -61,7 +65,11 @@ class UATReport:
 
     @property
     def is_green(self) -> bool:
-        return self.passed == self.checkable and self.pytest_returncode == 0
+        return (
+            self.passed == self.checkable
+            and self.not_ready == 0
+            and self.pytest_returncode == 0
+        )
 
 
 def _short_reason(value: str, *, limit: int = 220) -> str:
@@ -169,6 +177,8 @@ def build_report(
     )
     checkable = sum(item.state != "blocked_defect" for item in outcomes)
     passed = sum(item.state == "passed" for item in outcomes)
+    launched = sum(item.state in {"passed", "failed"} for item in outcomes)
+    not_ready = sum(item.state == "not_run" for item in outcomes)
     blocked = sum(item.state == "blocked_defect" for item in outcomes)
     grouped: dict[str, list[CaseOutcome]] = defaultdict(list)
     for outcome in outcomes:
@@ -177,6 +187,8 @@ def build_report(
         RoleOutcome(
             role=role,
             passed=sum(item.state == "passed" for item in items),
+            launched=sum(item.state in {"passed", "failed"} for item in items),
+            not_ready=sum(item.state == "not_run" for item in items),
             checkable=sum(item.state != "blocked_defect" for item in items),
             total=len(items),
         )
@@ -187,6 +199,8 @@ def build_report(
         generated_at=datetime.now(TASHKENT).isoformat(timespec="seconds"),
         status=status,
         passed=passed,
+        launched=launched,
+        not_ready=not_ready,
         checkable=checkable,
         blocked_defect=blocked,
         total=len(outcomes),
@@ -208,8 +222,9 @@ def render_human_report(report: UATReport) -> str:
     lines = [
         f"{icon} Operator AI — ежедневный happy-path UAT",
         (
-            f"Пройдено: {report.passed} из {report.checkable} проверяемых "
-            f"(ещё {report.blocked_defect} заблокировано дефектом; "
+            f"Пройдено: {report.passed} из {report.launched} запущенных "
+            f"({report.not_ready} не готово к запуску; "
+            f"{report.blocked_defect} заблокировано дефектом; "
             f"всего в чеклисте: {report.total})"
         ),
         f"Время тестов: {_duration(report.duration_seconds)}",
@@ -218,7 +233,8 @@ def render_human_report(report: UATReport) -> str:
     ]
     for role in report.roles:
         lines.append(
-            f"• {role.role}: {role.passed}/{role.checkable}/{role.total}"
+            f"• {role.role}: {role.passed}/{role.launched} запущенных; "
+            f"{role.not_ready} не готово; всего {role.total}"
         )
     problems = [
         item for item in report.outcomes if item.state in {"failed", "not_run"}

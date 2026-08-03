@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 from uuid import uuid4
 
 import pytest
-from playwright.sync_api import Page, expect
+from playwright.sync_api import APIRequestContext, Page, expect
 
 from autotests.config import Settings
 from autotests.api.user_api import UserApi
@@ -22,7 +22,11 @@ from autotests.pages.rop_list_page import RopListPage
 from autotests.support.auth_requests import login, require_access_token
 from autotests.support.operator_work import operator_work_harness
 from autotests.support.rop_api import cleanup_rops_by_username
-from autotests.support.operator_api import cleanup_users_by_username, list_extensions
+from autotests.support.operator_api import (
+    cleanup_users_by_username,
+    list_extensions,
+    list_operator_pipelines,
+)
 from autotests.uat.catalog import UATCase, load_catalog
 
 
@@ -42,6 +46,55 @@ def _env_gate(case_id: str, names: tuple[str, ...], reason: str) -> None:
 
 def _enabled(name: str) -> bool:
     return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _api_json(
+    response: Any,
+    *,
+    checkpoint: str,
+    expected_status: int = 200,
+) -> dict[str, Any]:
+    assert response.status == expected_status, (
+        f"{checkpoint}: ожидали HTTP {expected_status}, получили "
+        f"{response.status}."
+    )
+    body = response.json()
+    assert isinstance(body, dict), (
+        f"{checkpoint}: ожидали JSON-объект, получили {type(body).__name__}."
+    )
+    return body
+
+
+def _api_items(response: Any, *, checkpoint: str) -> list[dict[str, Any]]:
+    body = _api_json(response, checkpoint=checkpoint)
+    items = body.get("items")
+    assert isinstance(items, list) and all(isinstance(item, dict) for item in items), (
+        f"{checkpoint}: ответ не содержит корректный массив items."
+    )
+    return items
+
+
+def _role_request(
+    request: pytest.FixtureRequest,
+    role: str,
+) -> APIRequestContext:
+    playwright = request.getfixturevalue("playwright")
+    settings: Settings = request.getfixturevalue("test_settings")
+    role_api_token = request.getfixturevalue("role_api_token")
+    return playwright.request.new_context(
+        base_url=settings.require_api_base_url(),
+        extra_http_headers={
+            "Authorization": f"Bearer {role_api_token(role)}",
+            "Content-Type": "application/json",
+        },
+    )
+
+
+def _current_rop(rop_request: APIRequestContext) -> dict[str, Any]:
+    return _api_json(
+        rop_request.get("/v1/auth/me"),
+        checkpoint="[UAT] текущий ROP",
+    )
 
 
 def _uat_sys_001(request: pytest.FixtureRequest) -> None:
@@ -399,6 +452,347 @@ def _uat_sa_002(request: pytest.FixtureRequest) -> None:
             )
 
 
+def _configured_rop_for_integration(
+    superadmin_request: APIRequestContext,
+    rop_request: APIRequestContext,
+    *,
+    config_path: str,
+    checkpoint: str,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    rop = _current_rop(rop_request)
+    rop_id = str(rop.get("id") or "")
+    assert rop_id, f"{checkpoint}: у текущего ROP отсутствует ID."
+    configs = _api_items(
+        superadmin_request.get(config_path, params={"page": 1, "perPage": 100}),
+        checkpoint=f"{checkpoint} список конфигураций",
+    )
+    config = next(
+        (item for item in configs if str(item.get("rop_id") or "") == rop_id),
+        None,
+    )
+    assert config is not None, (
+        f"{checkpoint}: для выделенного staging ROP интеграция не подключена."
+    )
+    user = _api_json(
+        superadmin_request.get(f"/v1/users/{rop_id}"),
+        checkpoint=f"{checkpoint} карточка ROP",
+    )
+    return rop, user, config
+
+
+def _uat_sa_003(request: pytest.FixtureRequest) -> None:
+    rop_request = request.getfixturevalue("rop_api_request")
+    superadmin_request = _role_request(request, "superadmin")
+    page: Page = request.getfixturevalue("authorized_page_factory")("superadmin")
+    settings: Settings = request.getfixturevalue("test_settings")
+    try:
+        _, rop_user, config = _configured_rop_for_integration(
+            superadmin_request,
+            rop_request,
+            config_path="/v1/amocrm/configs",
+            checkpoint="[UAT-SA-003] AmoCRM",
+        )
+        assert config.get("is_active") is True, (
+            "[UAT-SA-003] подключение AmoCRM выключено."
+        )
+        company_name = str(
+            rop_user.get("company_name")
+            or (rop_user.get("company") or {}).get("name")
+            or ""
+        )
+        full_name = " ".join(
+            str(rop_user.get(key) or "").strip()
+            for key in ("first_name", "last_name")
+        ).strip()
+        assert company_name and full_name
+
+        rop_list = RopListPage(page)
+        page.goto(f"{settings.web_base_url}{RopListPage.PATH}", wait_until="commit")
+        expect(rop_list.heading).to_be_visible(timeout=20_000)
+        row = rop_list.row_by_company(company_name)
+        expect(row).to_have_count(1)
+        expect(row.get_by_role("cell").nth(2)).to_contain_text("Подключено")
+        dialog = rop_list.open_amocrm_dialog(
+            company_name,
+            user_full_name=full_name,
+        )
+        expect(dialog.dialog).to_contain_text("AmoCRM уже подключён")
+        expect(dialog.dialog).to_contain_text(str(config.get("domain") or ""))
+        dialog.dialog.get_by_role("button", name="Закрыть", exact=True).click()
+
+        synced = _api_items(
+            rop_request.post("/v1/amocrm/pipelines/sync"),
+            checkpoint="[UAT-SA-003] синхронизация воронок",
+        )
+        assert synced, "[UAT-SA-003] AmoCRM не вернула ни одной воронки."
+        selected = _api_json(
+            rop_request.get("/v1/amocrm/pipelines/selected"),
+            checkpoint="[UAT-SA-003] выбранная воронка",
+        )
+        selected_id = str(selected.get("id") or "")
+        assert selected_id
+        statuses = _api_items(
+            rop_request.get(
+                "/v1/amocrm/statuses",
+                params={"pipeline_id": selected_id},
+            ),
+            checkpoint="[UAT-SA-003] статусы выбранной воронки",
+        )
+        forms = _api_items(
+            rop_request.get("/v1/amocrm/forms"),
+            checkpoint="[UAT-SA-003] группы полей",
+        )
+        assert statuses, "[UAT-SA-003] выбранная воронка не содержит статусов."
+        assert forms, "[UAT-SA-003] AmoCRM не вернула группы полей."
+        form_id = str(forms[0].get("id") or "")
+        fields = _api_items(
+            rop_request.get(f"/v1/amocrm/forms/{form_id}/fields"),
+            checkpoint="[UAT-SA-003] поля формы",
+        )
+        assert fields, "[UAT-SA-003] выбранная группа AmoCRM не содержит полей."
+
+        rules_page: Page = request.getfixturevalue("authorized_page_factory")("rop")
+        rules_page.goto(
+            f"{settings.web_base_url}/dashboard/dynamic-form",
+            wait_until="commit",
+        )
+        expect(
+            rules_page.get_by_role("heading", name="Статусы лида", exact=True)
+        ).to_be_visible(timeout=20_000)
+        expect(
+            rules_page.get_by_role("heading", name="Поля формы", exact=True)
+        ).to_be_visible(timeout=20_000)
+        expect(
+            rules_page.get_by_text(str(selected.get("name") or ""), exact=True).first
+        ).to_be_visible(timeout=20_000)
+    finally:
+        superadmin_request.dispose()
+
+
+def _uat_sa_004(request: pytest.FixtureRequest) -> None:
+    rop_request = request.getfixturevalue("rop_api_request")
+    superadmin_request = _role_request(request, "superadmin")
+    page: Page = request.getfixturevalue("authorized_page_factory")("superadmin")
+    settings: Settings = request.getfixturevalue("test_settings")
+    try:
+        _, rop_user, config = _configured_rop_for_integration(
+            superadmin_request,
+            rop_request,
+            config_path="/v1/onlinepbx/configs",
+            checkpoint="[UAT-SA-004] OnlinePBX",
+        )
+        company_name = str(
+            rop_user.get("company_name")
+            or (rop_user.get("company") or {}).get("name")
+            or ""
+        )
+        full_name = " ".join(
+            str(rop_user.get(key) or "").strip()
+            for key in ("first_name", "last_name")
+        ).strip()
+        assert company_name and full_name
+
+        rop_list = RopListPage(page)
+        page.goto(f"{settings.web_base_url}{RopListPage.PATH}", wait_until="commit")
+        expect(rop_list.heading).to_be_visible(timeout=20_000)
+        row = rop_list.row_by_company(company_name)
+        expect(row).to_have_count(1)
+        expect(row.get_by_role("cell").nth(3)).to_contain_text("Подключено")
+        dialog = rop_list.open_onlinepbx_dialog(
+            company_name,
+            user_full_name=full_name,
+        )
+        expect(dialog.dialog).to_contain_text("OnlinePBX уже подключён")
+        expect(dialog.dialog).to_contain_text(str(config.get("domain") or ""))
+        dialog.dialog.get_by_role("button", name="Закрыть", exact=True).click()
+
+        extensions = list_extensions(
+            rop_request,
+            checkpoint="[UAT-SA-004] внутренние номера",
+        )
+        enabled = [
+            item
+            for item in extensions
+            if item.get("enabled") is True and str(item.get("extension") or "")
+        ]
+        assert enabled, "[UAT-SA-004] OnlinePBX не вернула активные extensions."
+
+        operators_page: Page = request.getfixturevalue("authorized_page_factory")("rop")
+        operator_list = OperatorListPage(operators_page)
+        operator_list.open(settings.web_base_url)
+        expect(operator_list.heading).to_be_visible(timeout=20_000)
+        create_dialog = operator_list.open_create_dialog()
+        expect(create_dialog.extension_select).to_be_visible(timeout=20_000)
+        create_dialog.open_extension_options()
+        expect(
+            create_dialog.extension_option(str(enabled[0]["extension"]))
+        ).to_be_visible()
+        operators_page.keyboard.press("Escape")
+        create_dialog.cancel_button.click()
+    finally:
+        superadmin_request.dispose()
+
+
+def _uat_sa_005(request: pytest.FixtureRequest) -> None:
+    page: Page = request.getfixturevalue("authorized_page_factory")("superadmin")
+    settings: Settings = request.getfixturevalue("test_settings")
+    superadmin_request = _role_request(request, "superadmin")
+    plans_page = None
+    original: dict[str, Any] | None = None
+    try:
+        plans = _api_items(
+            superadmin_request.get("/v1/plans"),
+            checkpoint="[UAT-SA-005] исходные тарифы",
+        )
+        original = next((item for item in plans if item.get("is_active") is True), None)
+        assert original is not None, "[UAT-SA-005] нет активного staging-тарифа."
+        code = str(original.get("code") or "")
+        original_name = str(original.get("name") or "")
+        assert code and original_name
+        suffix = uuid4().hex[:6]
+        changed_name = f"UAT {suffix} {original_name}"
+        changed_price = int(original.get("price") or 0) + 1
+        changed_description = f"UAT {suffix}: проверка публикации тарифа"
+        changed_features = [f"UAT {suffix}: функция доступна"]
+
+        from autotests.pages.plans_page import PlansPage
+
+        plans_page = PlansPage(page)
+        plans_page.open(settings.web_base_url)
+        expect(plans_page.heading).to_be_visible(timeout=20_000)
+        dialog = plans_page.open_edit_dialog(original_name)
+        expect(dialog.dialog).to_be_visible()
+        dialog.name_input.fill(changed_name)
+        dialog.price_input.fill(str(changed_price))
+        dialog.description_input.fill(changed_description)
+        dialog.features_input.fill("\n".join(changed_features))
+        with page.expect_response(
+            lambda response: response.request.method == "PATCH"
+            and urlsplit(response.url).path == f"/v1/plans/{code}"
+        ) as saved_info:
+            dialog.save_button.click()
+        assert saved_info.value.status == 200, (
+            "[UAT-SA-005] Super-admin не смог сохранить staging-тариф."
+        )
+        expect(plans_page.card_by_name(changed_name)).to_have_count(1)
+
+        published = _api_items(
+            superadmin_request.get("/v1/plans"),
+            checkpoint="[UAT-SA-005] опубликованные тарифы",
+        )
+        changed = next((item for item in published if item.get("code") == code), None)
+        assert changed is not None
+        assert changed.get("name") == changed_name
+        assert changed.get("price") == changed_price
+        assert changed.get("description") == changed_description
+        assert changed.get("features") == changed_features
+    finally:
+        if original is not None:
+            code = str(original.get("code") or "")
+            if code:
+                restored = superadmin_request.patch(
+                    f"/v1/plans/{code}",
+                    data={
+                        "name": original.get("name"),
+                        "price": original.get("price"),
+                        "description": original.get("description"),
+                        "features": original.get("features"),
+                        "is_active": original.get("is_active"),
+                        "sort": original.get("sort"),
+                    },
+                )
+                assert restored.status == 200, (
+                    "[UAT-SA-005 cleanup] не удалось восстановить staging-тариф."
+                )
+                if plans_page is not None:
+                    page.reload(wait_until="commit")
+                    expect(
+                        plans_page.card_by_name(str(original.get("name") or ""))
+                    ).to_have_count(1, timeout=20_000)
+        superadmin_request.dispose()
+
+
+def _uat_sa_006(request: pytest.FixtureRequest) -> None:
+    page: Page = request.getfixturevalue("authorized_page_factory")("superadmin")
+    settings: Settings = request.getfixturevalue("test_settings")
+    superadmin_request = _role_request(request, "superadmin")
+    rop_list = RopListPage(page)
+    created_ids: list[str] = []
+    tariff_options = (
+        ("taxlil_dashboard", "Аналитика"),
+        ("taxlil_dashboard_auto_call", "Аналитика + Авто-звонок"),
+        ("full_ai", "Full AI"),
+    )
+    try:
+        active_codes = {
+            str(item.get("code") or "")
+            for item in _api_items(
+                superadmin_request.get("/v1/plans"),
+                checkpoint="[UAT-SA-006] действующие тарифы",
+            )
+            if item.get("is_active") is True
+        }
+        assert active_codes == {code for code, _ in tariff_options}, (
+            "[UAT-SA-006] должны быть активны все три фиксированных тарифа."
+        )
+        page.goto(f"{settings.web_base_url}{RopListPage.PATH}", wait_until="commit")
+        expect(rop_list.heading).to_be_visible(timeout=20_000)
+
+        for index, (tariff_code, tariff_label) in enumerate(tariff_options):
+            unique = uuid4().hex
+            company_name = f"UAT Tariff {index + 1} {unique[:6]}"
+            dialog = rop_list.open_create_dialog()
+            dialog.fill(
+                first_name="UAT",
+                last_name=f"Tariff{index + 1}{unique[:4]}",
+                phone=f"+99893{uuid4().int % 10_000_000:07d}",
+                password=f"UAT!{unique[:12]}",
+                username=f"UAT-PLAN-{unique[:8]}",
+                company_name=company_name,
+            )
+            dialog.select_tariff(tariff_label)
+            with page.expect_response(
+                lambda response: response.request.method == "POST"
+                and urlsplit(response.url).path == "/v1/rops"
+            ) as created_info:
+                dialog.create()
+            created_response = created_info.value
+            try:
+                created_body = created_response.json()
+            except Exception:
+                created_body = {}
+            created_id = str(
+                (created_body.get("id") or "")
+                if isinstance(created_body, dict)
+                else ""
+            )
+            if created_id:
+                created_ids.append(created_id)
+            assert created_response.status == 200, (
+                f"[UAT-SA-006:{tariff_code}] ROP не создан."
+            )
+            assert created_id, f"[UAT-SA-006:{tariff_code}] ответ не содержит ID."
+            request_payload = created_response.request.post_data_json
+            assert isinstance(request_payload, dict)
+            assert request_payload.get("tariff") == tariff_code, (
+                f"[UAT-SA-006:{tariff_code}] UI отправил другой тариф."
+            )
+            expect(rop_list.row_by_company(company_name)).to_have_count(1)
+            persisted = _api_json(
+                superadmin_request.get(f"/v1/users/{created_id}"),
+                checkpoint=f"[UAT-SA-006:{tariff_code}] сохранённый ROP",
+            )
+            assert persisted.get("id") == created_id
+            assert persisted.get("company_name") == company_name
+    finally:
+        for created_id in reversed(created_ids):
+            deleted = superadmin_request.delete(f"/v1/users/{created_id}")
+            assert deleted.status == 200, (
+                f"[UAT-SA-006 cleanup] не удалён временный ROP {created_id}."
+            )
+        superadmin_request.dispose()
+
+
 def _uat_rop_001(request: pytest.FixtureRequest) -> None:
     _open_role_sections(
         request,
@@ -572,6 +966,322 @@ def _uat_rop_002(request: pytest.FixtureRequest) -> None:
                 draft.username,
                 checkpoint="[UAT-ROP-002 cleanup]",
             )
+
+
+def _uat_rop_003(request: pytest.FixtureRequest) -> None:
+    page: Page = request.getfixturevalue("authorized_page_factory")("rop")
+    settings: Settings = request.getfixturevalue("test_settings")
+    rop_request = request.getfixturevalue("rop_api_request")
+    temporary_operator = request.getfixturevalue("temporary_operator")
+    pipelines = _api_items(
+        rop_request.get("/v1/calling/assignable-pipelines"),
+        checkpoint="[UAT-ROP-003] доступные воронки",
+    )
+    assert len(pipelines) >= 2, (
+        "[UAT-ROP-003] для проверки нужны минимум две staging-воронки."
+    )
+    selected = pipelines[:2]
+    selected_ids = {str(item.get("id") or "") for item in selected}
+    assert len(selected_ids) == 2 and "" not in selected_ids
+    original = list_operator_pipelines(
+        rop_request,
+        temporary_operator.id,
+        checkpoint="[UAT-ROP-003] исходные назначения",
+    )
+    assert original == [], (
+        "[UAT-ROP-003] временный Operator неожиданно получил назначения."
+    )
+
+    try:
+        page.goto(
+            f"{settings.web_base_url}/dashboard/operator-pipelines",
+            wait_until="commit",
+        )
+        expect(
+            page.get_by_role("heading", name="Настройка очереди", exact=True)
+        ).to_be_visible(timeout=20_000)
+        card = page.locator(".MuiCard-root").filter(
+            has_text=f"{temporary_operator.first_name} {temporary_operator.last_name}"
+        )
+        expect(card).to_have_count(1)
+
+        for pipeline in selected:
+            pipeline_id = str(pipeline["id"])
+            pipeline_name = str(pipeline.get("name") or "")
+            with page.expect_response(
+                lambda response: response.request.method == "POST"
+                and urlsplit(response.url).path == "/v1/operator-pipelines"
+            ) as assigned_info:
+                card.get_by_text(pipeline_name, exact=True).click()
+            assert assigned_info.value.status == 200, (
+                f"[UAT-ROP-003] не назначена воронка {pipeline_id}."
+            )
+
+        assigned = list_operator_pipelines(
+            rop_request,
+            temporary_operator.id,
+            checkpoint="[UAT-ROP-003] два назначения",
+        )
+        assert {str(item.get("pipeline_id") or "") for item in assigned} == selected_ids
+
+        page.reload(wait_until="commit")
+        expect(
+            page.get_by_role("heading", name="Настройка очереди", exact=True)
+        ).to_be_visible(timeout=20_000)
+        reloaded_card = page.locator(".MuiCard-root").filter(
+            has_text=f"{temporary_operator.first_name} {temporary_operator.last_name}"
+        )
+        expect(reloaded_card).to_have_count(1)
+        removed = selected[0]
+        removed_id = str(removed["id"])
+        with page.expect_response(
+            lambda response: response.request.method == "DELETE"
+            and urlsplit(response.url).path
+            == f"/v1/operator-pipelines/{temporary_operator.id}/{removed_id}"
+        ) as removed_info:
+            reloaded_card.get_by_text(str(removed.get("name") or ""), exact=True).click()
+        assert removed_info.value.status == 200
+        remaining = list_operator_pipelines(
+            rop_request,
+            temporary_operator.id,
+            checkpoint="[UAT-ROP-003] одно назначение",
+        )
+        assert {str(item.get("pipeline_id") or "") for item in remaining} == {
+            str(selected[1]["id"])
+        }
+    finally:
+        current = list_operator_pipelines(
+            rop_request,
+            temporary_operator.id,
+            checkpoint="[UAT-ROP-003 cleanup] текущие назначения",
+        )
+        cleanup_failures: list[str] = []
+        for assignment in current:
+            pipeline_id = str(assignment.get("pipeline_id") or "")
+            response = rop_request.delete(
+                f"/v1/operator-pipelines/{temporary_operator.id}/{pipeline_id}"
+            )
+            if response.status != 200:
+                cleanup_failures.append(pipeline_id)
+        assert not cleanup_failures, (
+            "[UAT-ROP-003 cleanup] не восстановлены назначения: "
+            f"{cleanup_failures}."
+        )
+
+
+def _uat_rop_004(request: pytest.FixtureRequest) -> None:
+    page: Page = request.getfixturevalue("authorized_page_factory")("rop")
+    settings: Settings = request.getfixturevalue("test_settings")
+    rop_request = request.getfixturevalue("rop_api_request")
+    rop = _current_rop(rop_request)
+    rop_id = str(rop.get("id") or "")
+    selected = _api_json(
+        rop_request.get("/v1/amocrm/pipelines/selected"),
+        checkpoint="[UAT-ROP-004] выбранная воронка",
+    )
+    pipeline_id = str(selected.get("id") or "")
+    statuses = _api_items(
+        rop_request.get(
+            "/v1/amocrm/statuses",
+            params={"pipeline_id": pipeline_id},
+        ),
+        checkpoint="[UAT-ROP-004] статусы",
+    )
+    forms = _api_items(
+        rop_request.get("/v1/amocrm/forms"),
+        checkpoint="[UAT-ROP-004] формы",
+    )
+    assert statuses and forms
+    form = next(
+        (item for item in forms if "operator" in str(item.get("name") or "").lower()),
+        forms[0],
+    )
+    form_id = str(form.get("id") or "")
+    fields = _api_items(
+        rop_request.get(f"/v1/amocrm/forms/{form_id}/fields"),
+        checkpoint="[UAT-ROP-004] поля",
+    )
+    assert fields
+    status = statuses[0]
+    field = fields[0]
+    status_id = str(status.get("id") or "")
+    field_id = str(field.get("id") or "")
+    status_priority = int(status.get("priority") or 1)
+    field_required = bool(field.get("is_required"))
+    description_body = _api_json(
+        rop_request.get(f"/v1/users/{rop_id}/company-description"),
+        checkpoint="[UAT-ROP-004] описание компании",
+    )
+    original_description = str(description_body.get("description") or "")
+    marker = f"UAT-{uuid4().hex[:8]}"
+    status_hint = f"{marker}: позитивная подсказка статуса"
+    field_hint = f"{marker}: позитивная подсказка поля"
+    company_description = f"{marker}: тестовое описание компании"
+
+    try:
+        page.goto(
+            f"{settings.web_base_url}/dashboard/dynamic-form",
+            wait_until="commit",
+        )
+        expect(
+            page.get_by_role("heading", name="Статусы лида", exact=True)
+        ).to_be_visible(timeout=20_000)
+        expect(
+            page.get_by_text(str(selected.get("name") or ""), exact=True).first
+        ).to_be_visible(timeout=20_000)
+
+        page.get_by_text(str(status.get("name") or ""), exact=True).first.click()
+        status_dialog = page.get_by_role(
+            "dialog", name="Редактировать статус", exact=True
+        )
+        expect(status_dialog).to_be_visible()
+        status_dialog.get_by_label("Подсказка для ИИ", exact=True).fill(status_hint)
+        with page.expect_response(
+            lambda response: response.request.method == "PATCH"
+            and urlsplit(response.url).path == f"/v1/amocrm/statuses/{status_id}/hint"
+        ) as status_info:
+            status_dialog.get_by_role("button", name="Сохранить", exact=True).click()
+        assert status_info.value.status == 200
+        expect(page.get_by_text(status_hint, exact=True)).to_be_visible()
+
+        field_name = str(field.get("name") or "")
+        expect(page.get_by_text(field_name, exact=True).first).to_be_visible(timeout=20_000)
+        page.get_by_text(field_name, exact=True).first.click()
+        field_dialog = page.get_by_role(
+            "dialog", name="Редактировать поле", exact=True
+        )
+        expect(field_dialog).to_be_visible()
+        field_dialog.get_by_label("Подсказка для ИИ", exact=True).fill(field_hint)
+        with page.expect_response(
+            lambda response: response.request.method == "PATCH"
+            and urlsplit(response.url).path == f"/v1/amocrm/fields/{field_id}/hint"
+        ) as field_info:
+            field_dialog.get_by_role("button", name="Сохранить", exact=True).click()
+        assert field_info.value.status == 200
+        expect(page.get_by_text(field_hint, exact=True)).to_be_visible()
+
+        page.goto(
+            f"{settings.web_base_url}/dashboard/mezonlar",
+            wait_until="commit",
+        )
+        expect(page.get_by_role("heading", name="Критерии", exact=True)).to_be_visible(
+            timeout=20_000
+        )
+        description_input = page.locator("textarea").first
+        expect(description_input).to_be_visible(timeout=20_000)
+        description_input.fill(company_description)
+        description_card = description_input.locator(
+            "xpath=ancestor::div[contains(@class, 'MuiCard-root')]"
+        )
+        with page.expect_response(
+            lambda response: response.request.method == "PUT"
+            and urlsplit(response.url).path
+            == f"/v1/users/{rop_id}/company-description"
+        ) as description_info:
+            description_card.get_by_role(
+                "button", name="Сохранить", exact=True
+            ).click()
+        assert description_info.value.status == 200
+
+        page.reload(wait_until="commit")
+        expect(page.locator("textarea").first).to_have_value(
+            company_description,
+            timeout=20_000,
+        )
+        page.goto(
+            f"{settings.web_base_url}/dashboard/dynamic-form",
+            wait_until="commit",
+        )
+        expect(page.get_by_text(status_hint, exact=True)).to_be_visible(timeout=20_000)
+        expect(page.get_by_text(field_hint, exact=True)).to_be_visible(timeout=20_000)
+    finally:
+        restore_failures: list[str] = []
+        restore_status = rop_request.patch(
+            f"/v1/amocrm/statuses/{status_id}/hint",
+            data={"hint": str(status.get("hint") or ""), "priority": status_priority},
+        )
+        if restore_status.status != 200:
+            restore_failures.append("status")
+        restore_field = rop_request.patch(
+            f"/v1/amocrm/fields/{field_id}/hint",
+            data={
+                "hint": str(field.get("hint") or ""),
+                "required": field_required,
+            },
+        )
+        if restore_field.status != 200:
+            restore_failures.append("field")
+        restore_description = rop_request.put(
+            f"/v1/users/{rop_id}/company-description",
+            data={"description": original_description},
+        )
+        if restore_description.status != 200:
+            restore_failures.append("company_description")
+        assert not restore_failures, (
+            "[UAT-ROP-004 cleanup] не восстановлены значения: "
+            f"{restore_failures}."
+        )
+
+
+def _uat_rop_005(request: pytest.FixtureRequest) -> None:
+    page: Page = request.getfixturevalue("authorized_page_factory")("rop")
+    settings: Settings = request.getfixturevalue("test_settings")
+    rop_request = request.getfixturevalue("rop_api_request")
+    settings_body = _api_json(
+        rop_request.get("/v1/calling/settings"),
+        checkpoint="[UAT-ROP-005] исходные критерии",
+    )
+    original = settings_body.get("stored")
+    assert isinstance(original, dict)
+    changed = {
+        "work_start": "08:01",
+        "work_end": "19:01",
+        "retry_interval_min": 181,
+        "max_attempts": 5,
+        "before_arrival_min": 61,
+        "chala_delay_min": 31,
+        "default_call_time": "11:01",
+        "bugun_transition_time": "00:01",
+    }
+    try:
+        page.goto(
+            f"{settings.web_base_url}/dashboard/mezonlar",
+            wait_until="commit",
+        )
+        expect(page.get_by_role("heading", name="Критерии", exact=True)).to_be_visible(
+            timeout=20_000
+        )
+        criteria_card = page.locator(".MuiCard-root").first
+        criteria_inputs = criteria_card.locator("input")
+        expect(criteria_inputs).to_have_count(8)
+        for index, value in enumerate(changed.values()):
+            criteria_inputs.nth(index).fill(str(value))
+        with page.expect_response(
+            lambda response: response.request.method == "PUT"
+            and urlsplit(response.url).path == "/v1/calling/settings"
+        ) as saved_info:
+            criteria_card.get_by_role("button", name="Сохранить", exact=True).click()
+        assert saved_info.value.status == 200
+        expect(page.get_by_text("Критерии сохранены", exact=True)).to_be_visible()
+
+        page.reload(wait_until="commit")
+        expect(page.get_by_role("heading", name="Критерии", exact=True)).to_be_visible(
+            timeout=20_000
+        )
+        reloaded_inputs = page.locator(".MuiCard-root").first.locator("input")
+        expect(reloaded_inputs).to_have_count(8)
+        for index, value in enumerate(changed.values()):
+            expect(reloaded_inputs.nth(index)).to_have_value(str(value))
+        persisted = _api_json(
+            rop_request.get("/v1/calling/settings"),
+            checkpoint="[UAT-ROP-005] сохранённые критерии",
+        )
+        assert persisted.get("stored") == changed
+    finally:
+        restored = rop_request.put("/v1/calling/settings", data=original)
+        assert restored.status == 200, (
+            "[UAT-ROP-005 cleanup] не удалось восстановить критерии очереди."
+        )
 
 
 def _uat_op_001(request: pytest.FixtureRequest) -> None:
@@ -759,8 +1469,15 @@ HANDLERS: dict[str, Handler] = {
     "UAT-LND-001": _uat_lnd_001,
     "UAT-SA-001": _uat_sa_001,
     "UAT-SA-002": _uat_sa_002,
+    "UAT-SA-003": _uat_sa_003,
+    "UAT-SA-004": _uat_sa_004,
+    "UAT-SA-005": _uat_sa_005,
+    "UAT-SA-006": _uat_sa_006,
     "UAT-ROP-001": _uat_rop_001,
     "UAT-ROP-002": _uat_rop_002,
+    "UAT-ROP-003": _uat_rop_003,
+    "UAT-ROP-004": _uat_rop_004,
+    "UAT-ROP-005": _uat_rop_005,
     "UAT-ROP-006": _uat_rop_006,
     "UAT-OP-001": _uat_op_001,
     "UAT-OP-002": _uat_op_002,
@@ -770,13 +1487,6 @@ HANDLERS: dict[str, Handler] = {
 
 GATES: dict[str, str] = {
     "UAT-LND-002": "нужен удаляемый канал demo-заявок и явное разрешение OPERATOR_AI_UAT_ALLOW_DEMO_MUTATION=true",
-    "UAT-SA-003": "нужны отдельные AmoCRM credentials и разрешённый ежедневный cleanup",
-    "UAT-SA-004": "нужны отдельные OnlinePBX credentials и разрешённый ежедневный cleanup",
-    "UAT-SA-005": "нужно разрешение OPERATOR_AI_UAT_ALLOW_PLAN_MUTATION=true",
-    "UAT-SA-006": "нужны три удаляемые тестовые компании и подготовленные позитивные данные тарифов",
-    "UAT-ROP-003": "нужны две тестовые AmoCRM-воронки и разрешение изменять назначения",
-    "UAT-ROP-004": "нужна тестовая AmoCRM-структура и разрешение изменять подсказки",
-    "UAT-ROP-005": "нужно разрешение изменять и восстанавливать общие критерии очереди",
     "UAT-OP-004": "нужен удаляемый уникальный тестовый лид в очереди",
     "UAT-OP-007": "нужен безопасный setup готовой AI-сессии",
     "UAT-OP-008": "нужны два удаляемых тестовых лида",
