@@ -74,6 +74,8 @@ Wiki даёт короткое объяснение и ссылку на ист�
 | [Запуск и сопровождение ежедневного UAT](14-daily-uat-operations.md) | Runner, изолированные результаты, Telegram, расписание и правила красного дня |
 | [Первый технический UAT-прогон 03.08.2026](15-daily-uat-run-2026-08-03.md) | Фактические 12/27, ресурсные ворота, дефектные блокеры и время 3:24 |
 | [Первый стабильный GitHub UAT-прогон 03.08.2026](16-daily-uat-github-run-2026-08-03.md) | Расписание 08:00, серверный результат 12/27, Telegram-доставка и CI-адаптация |
+| [Расширение ежедневного UAT 03.08.2026](17-daily-uat-expansion-run-2026-08-03.md) | Активация семи обработчиков, BUG-046 и стабильный результат 18/18 |
+| [Полный ежедневный UAT 03.08.2026](18-daily-uat-full-run-2026-08-03.md) | Все 26 проверяемых сценариев, fixture cleanup, 5:54 и Telegram-доставка |
 
 ## Правила, при которых нужно остановиться
 
@@ -171,6 +173,8 @@ bekor qilingan eski qoida.
 | [Kunlik UAT’ni ishga tushirish va kuzatish (ruscha)](14-daily-uat-operations.md) | Runner, alohida natijalar, Telegram, jadval va qizil kun qoidalari |
 | [03.08.2026 texnik UAT natijasi (ruscha)](15-daily-uat-run-2026-08-03.md) | Haqiqiy 12/27 natija, resurs to‘siqlari, defect bloklari va 3:24 vaqt |
 | [03.08.2026 birinchi barqaror GitHub UAT natijasi (ruscha)](16-daily-uat-github-run-2026-08-03.md) | 08:00 jadvali, 12/27 server natijasi, Telegram yetkazib berish va CI moslashtirish |
+| [03.08.2026 kunlik UAT kengaytmasi (ruscha)](17-daily-uat-expansion-run-2026-08-03.md) | Yetti yangi handler, BUG-046 va 18/18 barqaror natija |
+| [03.08.2026 to‘liq kunlik UAT (ruscha)](18-daily-uat-full-run-2026-08-03.md) | Barcha 26 tekshiriladigan ssenariy, fixture cleanup, 5:54 va Telegram yetkazib berish |
 
 ### To‘xtash kerak bo‘lgan holatlar
 

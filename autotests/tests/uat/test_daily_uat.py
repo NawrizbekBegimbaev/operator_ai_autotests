@@ -3,8 +3,9 @@ from __future__ import annotations
 import os
 import re
 from collections.abc import Callable
+from contextlib import contextmanager
 from dataclasses import replace
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Any
 from urllib.parse import urlsplit
 from uuid import uuid4
@@ -262,6 +263,446 @@ def _uat_lnd_001(request: pytest.FixtureRequest) -> None:
         expect(page.locator(f"#{section_id}")).to_be_attached()
     expect(page.locator("#tariflar article").first).to_be_visible()
     assert not errors, "Landing открылся с runtime-ошибкой."
+
+
+def _uat_lnd_002(request: pytest.FixtureRequest) -> None:
+    _env_gate(
+        "UAT-LND-002",
+        ("OPERATOR_AI_LANDING_BASE_URL",),
+        "нужен URL тестового Landing",
+    )
+    page: Page = request.getfixturevalue("page")
+    settings: Settings = request.getfixturevalue("test_settings")
+    landing_url = os.environ["OPERATOR_AI_LANDING_BASE_URL"].rstrip("/")
+    unique = uuid4().hex
+    lead_name = f"UAT Demo {unique[:6]}"
+    company = f"UAT Landing {unique[:8]}"
+    phone = f"+99890{uuid4().int % 10_000_000:07d}"
+    username = f"UAT-LND-{unique[:8]}"
+    password = f"UAT!{unique[:12]}"
+    lead_id = ""
+    superadmin_page: Page | None = None
+    superadmin_api: UserApi | None = None
+    superadmin_request = _role_request(request, "superadmin")
+
+    try:
+        page.goto(f"{landing_url}/#demo", wait_until="networkidle")
+        page.locator('input[name="ism"]').fill(lead_name)
+        page.locator('input[name="telefon_raqam"]').fill(phone)
+        page.locator('input[name="kampaniya_nomi"]').fill(company)
+        page.locator('select[name="crm"]').select_option("amocrm")
+        page.locator('select[name="tarif"]').select_option("full_ai")
+        with page.expect_response(
+            lambda response: response.request.method == "POST"
+            and urlsplit(response.url).path == "/v1/leads",
+            timeout=15_000,
+        ) as submitted_info:
+            page.get_by_role("button", name="Demo so'rash", exact=True).click()
+        submitted = submitted_info.value
+        assert submitted.status == 200, (
+            "Landing не принял demo-заявку: "
+            f"HTTP {submitted.status}."
+        )
+        submitted_body = submitted.json()
+        lead_id = str(submitted_body.get("id") or "")
+        assert lead_id, "Landing не вернул ID созданной demo-заявки."
+        expect(page.get_by_role("status")).to_contain_text("So'rov qabul qilindi")
+
+        superadmin_page = request.getfixturevalue("authorized_page_factory")(
+            "superadmin"
+        )
+        superadmin_api = UserApi.from_authorized_page(
+            superadmin_page,
+            settings.web_base_url,
+            discovery_path=RopListPage.PATH,
+        )
+        superadmin_page.goto(
+            f"{settings.web_base_url}/dashboard/leads/{lead_id}",
+            wait_until="domcontentloaded",
+        )
+        expect(superadmin_page.get_by_text(lead_name, exact=True)).to_be_visible(
+            timeout=15_000
+        )
+        expect(superadmin_page.get_by_text(company, exact=True)).to_be_visible()
+        expect(superadmin_page.get_by_text(phone, exact=True)).to_be_visible()
+        expect(superadmin_page.get_by_text("Full AI", exact=True)).to_be_visible()
+
+        superadmin_page.get_by_role(
+            "button", name="Создать РОП из лида", exact=True
+        ).click()
+        dialog = superadmin_page.get_by_role(
+            "dialog", name="Создать РОП из лида"
+        )
+        expect(dialog).to_be_visible()
+        dialog.locator('input[name="username"]').fill(username)
+        dialog.locator('input[name="password"]').fill(password)
+        with superadmin_page.expect_response(
+            lambda response: response.request.method == "POST"
+            and urlsplit(response.url).path == "/v1/rops",
+            timeout=15_000,
+        ) as created_info:
+            dialog.get_by_role("button", name="Создать РОП", exact=True).click()
+        assert created_info.value.status == 200, (
+            "Superadmin не смог превратить demo-заявку в ROP."
+        )
+        expect(
+            superadmin_page.get_by_text(
+                "РОП создан, лид сконвертирован", exact=True
+            )
+        ).to_be_visible(timeout=15_000)
+
+        lead = _api_json(
+            superadmin_request.get(f"/v1/leads/{lead_id}"),
+            checkpoint="[UAT-LND-002] сконвертированная заявка",
+        )
+        assert lead.get("converted_at"), "Demo-заявка не отмечена сконвертированной."
+        assert lead.get("tariff") == "full_ai", "Выбранный Landing-тариф потерян."
+    finally:
+        cleanup_errors: list[Exception] = []
+        try:
+            if superadmin_api is not None:
+                try:
+                    cleanup_rops_by_username(
+                        superadmin_api,
+                        username,
+                        checkpoint="[UAT-LND-002 cleanup ROP]",
+                    )
+                except Exception as error:
+                    cleanup_errors.append(error)
+            if lead_id:
+                try:
+                    deleted = superadmin_request.delete(f"/v1/leads/{lead_id}")
+                    assert deleted.status == 200, (
+                        "[UAT-LND-002 cleanup] demo-заявка не удалена: "
+                        f"HTTP {deleted.status}: {deleted.text()}"
+                    )
+                except Exception as error:
+                    cleanup_errors.append(error)
+        finally:
+            superadmin_request.dispose()
+        if cleanup_errors:
+            raise cleanup_errors[0]
+
+
+@contextmanager
+def _uat_fixture_leads(
+    request: pytest.FixtureRequest,
+    specs: list[dict[str, Any]],
+):
+    temporary_operator = request.getfixturevalue("temporary_operator")
+    rop_request: APIRequestContext = temporary_operator.rop_request
+    settings: Settings = request.getfixturevalue("test_settings")
+    playwright = request.getfixturevalue("playwright")
+    browser = request.getfixturevalue("browser")
+    browser_context_args = request.getfixturevalue("browser_context_args")
+    login_rate_guard = request.getfixturevalue("login_rate_guard")
+    items: list[dict[str, Any]] = []
+    assigned_pipeline_id = ""
+    try:
+        pipelines = _api_items(
+            rop_request.get("/v1/calling/assignable-pipelines"),
+            checkpoint="[UAT fixture] доступные воронки",
+        )
+        required_classes = {
+            str(spec.get("status_class") or "")
+            for spec in specs
+        }
+        if "uchrashuv" in required_classes:
+            required_classes.add("bugun_keladi")
+        if any(
+            spec.get("status_class") == "kotarmadi"
+            and int(spec.get("attempts") or 0) == 3
+            for spec in specs
+        ):
+            required_classes.add("sifatsiz")
+
+        compatible_pipelines: list[dict[str, Any]] = []
+        pipeline_classes: dict[str, set[str]] = {}
+        for pipeline in pipelines:
+            pipeline_id = str(pipeline.get("id") or "")
+            if not pipeline_id:
+                continue
+            statuses = _api_items(
+                rop_request.get(
+                    "/v1/amocrm/statuses",
+                    params={"pipeline_id": pipeline_id},
+                ),
+                checkpoint=f"[UAT fixture] статусы воронки {pipeline_id}",
+            )
+            classes = {
+                _uat_status_class(str(status.get("name") or ""))
+                for status in statuses
+            }
+            pipeline_classes[pipeline_id] = classes
+            if required_classes <= classes:
+                compatible_pipelines.append(pipeline)
+
+        assert compatible_pipelines, (
+            "Нет staging-воронки со статусами, нужными сценарию: "
+            f"{sorted(required_classes)}; найденные классы: {pipeline_classes}."
+        )
+        assignment_results: list[str] = []
+        for pipeline in compatible_pipelines:
+            pipeline_id = str(pipeline.get("id") or "")
+            if not pipeline_id:
+                continue
+            assigned = rop_request.post(
+                "/v1/uat/fixtures/operator-pipelines",
+                data={
+                    "operator_id": temporary_operator.id,
+                    "pipeline_id": pipeline_id,
+                },
+            )
+            assignment_results.append(f"{pipeline_id}: HTTP {assigned.status}")
+            if assigned.status == 200:
+                assigned_pipeline_id = pipeline_id
+                break
+        assert assigned_pipeline_id, (
+            "Не удалось назначить временного Operator ни на одну staging-воронку: "
+            f"{assignment_results}."
+        )
+
+        with operator_work_harness(
+            temporary_operator=temporary_operator,
+            browser=browser,
+            browser_context_args=browser_context_args,
+            playwright=playwright,
+            test_settings=settings,
+            login_rate_guard=login_rate_guard,
+        ) as harness:
+            try:
+                created = rop_request.post(
+                    "/v1/uat/fixtures/leads",
+                    data={
+                        "operator_id": temporary_operator.id,
+                        "run_id": f"daily-{uuid4().hex[:10]}",
+                        "leads": specs,
+                    },
+                )
+                body = _api_json(
+                    created,
+                    checkpoint="[UAT fixture] создание временных лидов",
+                )
+                raw_items = body.get("items")
+                assert isinstance(raw_items, list) and len(raw_items) == len(specs), (
+                    "Fixture API создал не все запрошенные лиды."
+                )
+                items = [item for item in raw_items if isinstance(item, dict)]
+                assert len(items) == len(specs)
+                yield items, harness.operator_request, rop_request, harness.page
+            finally:
+                for item in reversed(items):
+                    lead_id = str(item.get("id") or "")
+                    if not lead_id:
+                        continue
+                    deleted = rop_request.delete(f"/v1/uat/fixtures/leads/{lead_id}")
+                    assert deleted.status == 200, (
+                        f"[UAT fixture cleanup] лид {lead_id} не удалён: "
+                        f"HTTP {deleted.status}: {deleted.text()}"
+                    )
+    finally:
+        if assigned_pipeline_id:
+            unassigned = rop_request.delete(
+                "/v1/operator-pipelines/"
+                f"{temporary_operator.id}/{assigned_pipeline_id}"
+            )
+            assert unassigned.status == 200, (
+                "[UAT fixture cleanup] назначение временного Operator не удалено: "
+                f"HTTP {unassigned.status}: {unassigned.text()}"
+            )
+
+
+def _open_calling_modal(page: Page, base_url: str) -> None:
+    page.goto(f"{base_url}/dashboard/calling", wait_until="domcontentloaded")
+    expect(page.get_by_role("progressbar")).to_have_count(0, timeout=20_000)
+    page.get_by_role("button", name="Начать обзвон", exact=True).click()
+
+
+def _uat_status_class(name: str) -> str:
+    normalized = name.strip().lower()
+    for apostrophe in ("'", "’", "`", "ʻ", "ʼ"):
+        normalized = normalized.replace(apostrophe, "")
+    if "kotarmadi" in normalized:
+        return "kotarmadi"
+    if "chala" in normalized:
+        return "chala"
+    if "keyingi" in normalized and "qongiroq" in normalized:
+        return "keyingi_qongiroq"
+    if "bugun" in normalized:
+        return "bugun_keladi"
+    if "uchrashuv" in normalized:
+        return "uchrashuv"
+    if "markaz" in normalized:
+        return "markazga_keldi"
+    if "sifatsiz" in normalized:
+        return "sifatsiz"
+    if "yangi" in normalized:
+        return "yangi"
+    return "other"
+
+
+def _uat_op_004(request: pytest.FixtureRequest) -> None:
+    settings: Settings = request.getfixturevalue("test_settings")
+    with _uat_fixture_leads(
+        request, [{"key": "queue", "status_class": "yangi"}]
+    ) as (items, operator_request, _, page):
+        count = _api_json(
+            operator_request.get("/v1/calling/queue"),
+            checkpoint="[UAT-OP-004] количество лидов",
+        )
+        assert int(count.get("count") or 0) >= 1, "Очередь не показывает тестового лида."
+        with page.expect_response(
+            lambda response: urlsplit(response.url).path == "/v1/calling/next"
+        ) as next_info:
+            _open_calling_modal(page, settings.web_base_url)
+        next_body = next_info.value.json()
+        guideline = next_body.get("guideline") or {}
+        assert (guideline.get("lead") or {}).get("id") == items[0].get("id")
+        expect(page.get_by_text(str(items[0]["name"]), exact=True).first).to_be_visible()
+        expect(page.get_by_text("Цель и обязательные поля", exact=True)).to_be_visible()
+        assert (guideline.get("reason") or {}).get("status_class") == "yangi"
+
+
+def _uat_op_007(request: pytest.FixtureRequest) -> None:
+    settings: Settings = request.getfixturevalue("test_settings")
+    with _uat_fixture_leads(
+        request,
+        [{"key": "ai-ready", "status_class": "yangi", "ready_ai_result": True}],
+    ) as (items, _, _, page):
+        captured: list[dict[str, Any]] = []
+
+        def fulfill_confirm(route: Any) -> None:
+            captured.append(route.request.post_data_json or {})
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                body='{"id":"uat","state":"synced"}',
+            )
+
+        page.route("**/v1/calling/sessions/*/confirm", fulfill_confirm)
+        with page.expect_response(
+            lambda response: response.request.method == "POST"
+            and urlsplit(response.url).path.endswith("/confirm"),
+            timeout=30_000,
+        ) as confirmed_info:
+            _open_calling_modal(page, settings.web_base_url)
+            expect(
+                page.get_by_text("Рекомендация ИИ — подтвердите", exact=True)
+            ).to_be_visible(timeout=15_000)
+            expect(page.get_by_text("UAT: mijoz", exact=False)).to_be_visible()
+            expect(page.get_by_text("через 20 сек", exact=True)).to_be_visible()
+        assert confirmed_info.value.status == 200, (
+            "UI не завершил автосохранение AI-результата."
+        )
+        assert len(captured) == 1, "UI не отправил AI-результат после таймера."
+        assert items[0].get("session_id"), "Fixture не подготовил AI-сессию."
+
+
+def _uat_op_008(request: pytest.FixtureRequest) -> None:
+    settings: Settings = request.getfixturevalue("test_settings")
+    with _uat_fixture_leads(
+        request,
+        [
+            {"key": "skip-first", "status_class": "yangi"},
+            {"key": "skip-second", "status_class": "yangi"},
+        ],
+    ) as (items, _, _, page):
+        _open_calling_modal(page, settings.web_base_url)
+        expect(page.get_by_text(str(items[0]["name"]), exact=True).first).to_be_visible(
+            timeout=15_000
+        )
+        with page.expect_response(
+            lambda response: response.request.method == "POST"
+            and urlsplit(response.url).path.endswith("/skip")
+        ) as skipped_info:
+            page.get_by_role("button", name="Пропустить", exact=True).click()
+        assert skipped_info.value.status == 200
+        expect(page.get_by_text(str(items[1]["name"]), exact=True).first).to_be_visible(
+            timeout=15_000
+        )
+
+
+def _uat_flow_001(request: pytest.FixtureRequest) -> None:
+    now = datetime.now(timezone.utc).isoformat()
+    expected = [
+        ("bugun_keladi", {"arrival_at": now}),
+        ("keyingi_qongiroq", {"callback_at": now}),
+        ("chala", {}),
+        ("kotarmadi", {}),
+        ("yangi", {}),
+    ]
+    specs = [
+        {"key": f"rank-{index}", "status_class": status_class, **extra}
+        for index, (status_class, extra) in enumerate(expected, 1)
+    ]
+    with _uat_fixture_leads(request, specs) as (_, operator_request, _, _):
+        actual: list[str] = []
+        for _ in expected:
+            next_body = _api_json(
+                operator_request.get("/v1/calling/next"),
+                checkpoint="[UAT-FLOW-001] следующий лид",
+            )
+            guideline = next_body.get("guideline") or {}
+            actual.append(str((guideline.get("reason") or {}).get("status_class")))
+            session_id = str((guideline.get("session") or {}).get("id") or "")
+            assert session_id
+            skipped = operator_request.post(
+                f"/v1/calling/sessions/{session_id}/skip", data={}
+            )
+            assert skipped.status == 200
+        assert actual == [status for status, _ in expected], (
+            f"Неверный порядок очереди: {actual}."
+        )
+
+
+def _uat_flow_002(request: pytest.FixtureRequest) -> None:
+    settings: Settings = request.getfixturevalue("test_settings")
+    now = datetime.now(timezone.utc).isoformat()
+    with _uat_fixture_leads(
+        request,
+        [{"key": "meeting", "status_class": "uchrashuv", "appointment_at": now}],
+    ) as (items, _, rop_request, page):
+        transitioned = _api_json(
+            rop_request.post(
+                "/v1/uat/fixtures/transitions",
+                data={"lead_ids": [items[0]["id"]]},
+            ),
+            checkpoint="[UAT-FLOW-002] переход встречи",
+        )
+        assert transitioned["items"][0]["status_class"] == "bugun_keladi"
+        _open_calling_modal(page, settings.web_base_url)
+        expect(page.get_by_text(str(items[0]["name"]), exact=True).first).to_be_visible(
+            timeout=15_000
+        )
+        expect(page.get_by_text("Придёт сегодня", exact=False)).to_be_visible()
+
+
+def _uat_flow_003(request: pytest.FixtureRequest) -> None:
+    with _uat_fixture_leads(
+        request,
+        [{"key": "fourth-attempt", "status_class": "kotarmadi", "attempts": 3}],
+    ) as (items, operator_request, rop_request, _):
+        transitioned = _api_json(
+            rop_request.post(
+                "/v1/uat/fixtures/transitions",
+                data={"lead_ids": [items[0]["id"]]},
+            ),
+            checkpoint="[UAT-FLOW-003] четвёртая попытка",
+        )
+        assert transitioned["items"][0]["status_class"] == "sifatsiz"
+        preview = _api_json(
+            operator_request.get("/v1/calling/queue/preview"),
+            checkpoint="[UAT-FLOW-003] очередь после перехода",
+        )
+        visible_ids = {
+            str(item.get("lead_id") or "")
+            for group in (preview.get("due", []), preview.get("scheduled", []))
+            for item in group
+            if isinstance(item, dict)
+        }
+        assert str(items[0]["id"]) not in visible_ids, (
+            "Лид Sifatsiz остался в очереди Operator."
+        )
 
 
 def _open_role_sections(
@@ -1467,6 +1908,7 @@ HANDLERS: dict[str, Handler] = {
     "UAT-COM-001": _uat_com_001,
     "UAT-COM-002": _uat_com_002,
     "UAT-LND-001": _uat_lnd_001,
+    "UAT-LND-002": _uat_lnd_002,
     "UAT-SA-001": _uat_sa_001,
     "UAT-SA-002": _uat_sa_002,
     "UAT-SA-003": _uat_sa_003,
@@ -1481,19 +1923,17 @@ HANDLERS: dict[str, Handler] = {
     "UAT-ROP-006": _uat_rop_006,
     "UAT-OP-001": _uat_op_001,
     "UAT-OP-002": _uat_op_002,
+    "UAT-OP-004": _uat_op_004,
+    "UAT-OP-007": _uat_op_007,
+    "UAT-OP-008": _uat_op_008,
     "UAT-OP-009": _uat_op_009,
+    "UAT-FLOW-001": _uat_flow_001,
+    "UAT-FLOW-002": _uat_flow_002,
+    "UAT-FLOW-003": _uat_flow_003,
 }
 
 
-GATES: dict[str, str] = {
-    "UAT-LND-002": "нужен удаляемый канал demo-заявок и явное разрешение OPERATOR_AI_UAT_ALLOW_DEMO_MUTATION=true",
-    "UAT-OP-004": "нужен удаляемый уникальный тестовый лид в очереди",
-    "UAT-OP-007": "нужен безопасный setup готовой AI-сессии",
-    "UAT-OP-008": "нужны два удаляемых тестовых лида",
-    "UAT-FLOW-001": "нужен setup пяти независимых тестовых лидов",
-    "UAT-FLOW-002": "нужен setup наступившей встречи без ожидания времени",
-    "UAT-FLOW-003": "нужен setup лида с тремя попытками и безопасный переход",
-}
+GATES: dict[str, str] = {}
 
 
 def _marks_for(case: UATCase) -> list[Any]:

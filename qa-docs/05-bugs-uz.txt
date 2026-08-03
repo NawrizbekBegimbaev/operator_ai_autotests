@@ -90,14 +90,14 @@ production — haqiqiy foydalanuvchi va ma'lumotlar ishlaydigan jangovar tizim.
 UMUMIY RO'YXAT
 --------------
 
-BUG-001 | Parolni ko'rsatish tugmasi matn bilan chiqadi, ko'z ikonkasi bo'lishi kerak | Admin, kirish ekrani | P3 | Yangi
-BUG-002 | Kirish ekranida Super-adminning ishchi ma'lumotlari oldindan to'ldirilgan | Admin, kirish ekrani | P1 | Yangi
+BUG-001 | Parolni ko'rsatish tugmasi matn bilan chiqadi, ko'z ikonkasi bo'lishi kerak | Admin, kirish ekrani | P3 | Tuzatilgan
+BUG-002 | Kirish ekranida Super-adminning ishchi ma'lumotlari oldindan to'ldirilgan | Admin, kirish ekrani | P1 | Tuzatilgan
 BUG-003 | Maydonlardagi matn vertikal markazda emas, yuqoriga siqilgan | Admin, turli formalar | P3 | Yangi
-BUG-004 | «Telefon» maydoni harf va istalgan matnni qabul qiladi | Admin, «ROP yaratish» formasi | P2 | Yangi
-BUG-005 | Yangi parol kiritiladigan formalarda parolni ko'rsatish tugmasi yo'q | Admin, turli formalar | P3 | Yangi
-BUG-006 | Deaktivatsiyadan keyin frontend sessiyasi tugamaydi: eski sahifa ochiq qoladi va qayta aktivatsiyadan so'ng yana ishlaydi | Admin, avtorizatsiya va deaktivatsiya | P2 | Yangi
-BUG-007 | Bitta telefon raqami bilan bir nechta ROP yaratish mumkin | Admin, ROP yaratish | P2 | Yangi
-BUG-008 | Tarif narxiga to'g'ri son kiritilganda «Invalid input» xatosi chiqqan | Admin, tariflar | P2 | Tuzatilgan, tekshiruv kutilmoqda
+BUG-004 | «Telefon» maydoni harf va istalgan matnni qabul qiladi | Admin, «ROP yaratish» formasi | P2 | Tuzatilgan
+BUG-005 | Yangi parol kiritiladigan formalarda parolni ko'rsatish tugmasi yo'q | Admin, turli formalar | P3 | Tuzatilgan
+BUG-006 | Deaktivatsiyadan keyin frontend sessiyasi tugamaydi: eski sahifa ochiq qoladi va qayta aktivatsiyadan so'ng yana ishlaydi | Admin, avtorizatsiya va deaktivatsiya | P2 | Tuzatilgan
+BUG-007 | Bitta telefon raqami bilan bir nechta ROP yaratish mumkin | Admin, ROP yaratish | P2 | Tuzatilgan
+BUG-008 | Tarif narxiga to'g'ri son kiritilganda «Invalid input» xatosi chiqqan | Admin, tariflar | P2 | Tuzatilgan
 BUG-009 | Gemini maxfiy kaliti xatolik paytida loglarga tushgan | Google Gemini integratsiyasi | P1 | Tuzatilgan, tekshiruv kutilmoqda
 BUG-010 | Ish haqi qiymati razryadlarga ajratilmaydi va o'qish qiyin | Admin, «Operator yaratish» formasi | P3 | Yangi
 BUG-011 | «Ish haqi kuni» maydonida oy kuni o'rniga to'liq sana tanlanadi | Admin, «Operator yaratish» formasi | P2 | Yangi
@@ -120,6 +120,18 @@ BUG-027 | Tanlangan qo'ng'iroq sahifasi ma'lumotsiz ochiladi va yuklash xatosini
 BUG-028 | API istalgan tashqi origin uchun credentialed CORS so'rovlariga ruxsat beradi | Backend API, CORS | P2 | Yangi
 BUG-029 | Bitimlar SSE oqimi HTTP javobisiz osilib qoladi va realtime yangilanishlar kelmaydi | Admin, Operator, «Qo'ng'iroqlar» bo'limi | P2 | Yangi
 BUG-030 | Operatorni sekin saqlash vaqtida tushunarli yuklanish indikatori ko'rsatilmaydi | Admin, ROP, operatorni tahrirlash | P3 | Yangi
+BUG-031 | Mavjud bo'lmagan lid 404 o'rniga HTTP 500 va Google Sheets texnik xatosini qaytaradi | Admin, Super-admin, lid kartasi | P2 | Yangi
+BUG-032 | API saqlangan OnlinePBX `call_token` qiymatini ochiq matnda qaytaradi | Backend API, OnlinePBX, Super-admin | P1 | Yangi
+BUG-033 | Ruscha kirish formasi noto'g'ri ma'lumotlar xatosini o'zbekcha ko'rsatadi | Admin, kirish ekrani, lokalizatsiya | P2 | Yangi
+BUG-034 | Parolni o'zgartirish oynasi ruscha interfeysda o'zbekcha qoladi | Admin, profil menyusi, lokalizatsiya | P2 | Yangi
+BUG-035 | O'zbekcha ulash oynasida OnlinePBX nomi kichik harf bilan boshlanadi | Admin, ROP, OnlinePBX lokalizatsiyasi | P3 | Yangi
+BUG-036 | Ruscha ish vaqti ekrani faol tanaffus xatosini o'zbekcha ko'rsatadi | Admin, Operator, ish vaqti | P2 | Yangi
+BUG-037 | Browser tab sarlavhalari o'zbekcha hardcode qilingan va tanlangan tilga moslashmaydi | Admin, asosiy bo'limlar, browser title | P3 | Yangi
+BUG-038 | Smena tarixida tugallangan tanaffus davomiyligi ko'rsatilmaydi | Admin, Operator, ish vaqti | P3 | Yangi
+BUG-045 | Sahifalashdan keyingi qo'ng'iroq filtri mavjud yozuvlarni yashiradi | Backend API, OnlinePBX / Admin, ROP | P2 | Yangi
+BUG-046 | Ishlayotgan AmoCRMni qayta sinxronlash 409 konflikt bilan tugaydi | Backend API, AmoCRM / Admin, ROP | P1 | Yangi
+BUG-047 | WebRTC ro'yxatdan o'tganida tiklangan wrap-up sessiyasining tayyor AI natijasi ochilmaydi | Admin, Operator, qo'ng'iroq rejimi | P1 | Tekshirildi, yopildi
+BUG-048 | Birinchi qo'ng'iroqning umumiy sababi Bugun keladi status sababini yashiradi | Admin, Operator, qo'ng'iroq sababi | P2 | Tekshirildi, yopildi
 
 YANGI BAG UCHUN SHABLON
 -----------------------
@@ -129,7 +141,7 @@ BUG-XXX. Qisqa nom
 Web | Admin — <rol yoki bo'lim> | staging | <muammoning qisqa va aniq tavsifi>
 
 Muhimlik:
-Holat: Yangi
+Holat: Tuzatilgan (31.07.2026 jamoa xabariga ko'ra; qayta tekshirilmagan)
 Sana:
 
 Tavsif:
@@ -158,7 +170,7 @@ BUG-001. Parolni ko'rsatish tugmasi ikonka o'rniga matn bilan chiqadi
 Web | Admin — kirish ekrani | production | «Parol» maydonidagi tugma ko'z ikonkasi o'rniga «показать» («ko'rsatish») matni bilan chiqadi.
 
 Muhimlik: P3, kosmetik muammo
-Holat: Yangi
+Holat: Tuzatilgan (31.07.2026 jamoa xabariga ko'ra; qayta tekshirilmagan)
 Sana: 23.07.2026
 
 Tavsif:
@@ -189,7 +201,7 @@ BUG-002. Kirish ekrani Super-admin ma'lumotlari bilan oldindan to'ldirilgan
 Web | Admin — kirish ekrani | production | Sahifa ochilganda login va parol maydonlari Super-adminning ishchi ma'lumotlari bilan to'ldirilgan.
 
 Muhimlik: P1, xavfsizlik muammosi
-Holat: Yangi
+Holat: Tuzatilgan (31.07.2026 jamoa xabariga ko'ra; qayta tekshirilmagan)
 Sana: 23.07.2026
 
 Tavsif:
@@ -261,7 +273,7 @@ BUG-004. «Telefon» maydoni harf va istalgan matnni qabul qiladi
 Web | Admin — Super-admin, «ROP yaratish» formasi | production | «Telefon» maydoni harf va begona belgilarni qabul qiladi, raqam formati tekshirilmaydi.
 
 Muhimlik: P2, tizimga noto'g'ri ma'lumot saqlanishi mumkin
-Holat: Yangi
+Holat: Tuzatilgan (31.07.2026 jamoa xabariga ko'ra; qayta tekshirilmagan)
 Sana: 23.07.2026
 
 Tavsif:
@@ -295,7 +307,7 @@ BUG-005. Yangi parol maydonlarida parolni ko'rsatish tugmasi yo'q
 Web | Admin — turli formalar | production | Yangi parol kiritiladigan maydonlarda ko'z ikonkasi yo'q va kiritilgan parolni tekshirib bo'lmaydi.
 
 Muhimlik: P3, foydalanish qulayligi
-Holat: Yangi
+Holat: Tuzatilgan (31.07.2026 jamoa xabariga ko'ra; qayta tekshirilmagan)
 Sana: 23.07.2026
 
 Tavsif:
@@ -334,7 +346,7 @@ BUG-006. Foydalanuvchi deaktivatsiya qilingandan keyin ochiq frontend sessiyasi 
 Web (Safari) / API | Admin — kirish va foydalanuvchini deaktivatsiya qilish | production (23.07.2026), stagingda tasdiqlandi (29.07.2026) | Backend deaktivatsiya qilingan sessiya so'rovlarini bloklaydi, ammo frontend sessiyani yopmaydi; qayta aktivatsiyadan keyin eski sahifa yangi kirishsiz yana ishlaydi.
 
 Muhimlik: P2, sessiya butunlay tugamaydi va foydalanuvchi kirish sahifasiga qaytarilmaydi
-Holat: Yangi
+Holat: Tuzatilgan (31.07.2026 jamoa xabariga ko'ra; tuzatish qayta tekshirilmagan)
 Sana: 23.07.2026
 Qayta tekshiruv: 29.07.2026
 
@@ -380,7 +392,7 @@ BUG-007. Bitta telefon raqami bilan bir nechta ROP yaratish mumkin
 Web | Admin — Super-admin, ROP yaratish | production | Tizim bir xil telefon raqami bilan bir nechta ROP yaratishga ruxsat beradi va ogohlantirish ko'rsatmaydi.
 
 Muhimlik: P2, ma'lumotlar yaxlitligi buzilishi mumkin
-Holat: Yangi
+Holat: Tuzatilgan (31.07.2026 jamoa xabariga ko'ra; qayta tekshirilmagan)
 Sana: 23.07.2026
 
 Tavsif:
@@ -415,7 +427,7 @@ BUG-008. Tarif narxi to'g'ri sonlarni rad etgan va «Invalid input» xatosini ko
 Web | Admin — Super-admin, «Tariflar» bo'limi | production | Tarifni tahrirlashda «Narx» maydoni to'g'ri sonni qabul qilmagan va tarifni saqlab bo'lmagan.
 
 Muhimlik: P2
-Holat: Tuzatilgan, stagingda tekshiruv kutilmoqda
+Holat: Tuzatilgan (31.07.2026 jamoa xabariga ko'ra; qayta tekshirilmagan)
 Sana: 23.07.2026
 
 Tavsif:
@@ -1377,3 +1389,1031 @@ Qo'shimcha tekshiruv:
 3. Takroriy bosishda faqat bitta `PATCH` yuborilishini tekshiring.
 4. Yuklanish holati screen reader tomonidan e'lon qilinishini tekshiring.
 5. Tuzatilgandan keyin TC-379 ni 2,5 va 20 soniyalik kechikishlarda takrorlang.
+
+
+BUG-031. Mavjud bo'lmagan lid 404 o'rniga HTTP 500 va Google Sheets texnik xatosini qaytaradi
+------------------------------------------------------------------------------------------------
+
+Web — Chromium | Admin — Super-admin, lid kartasi | staging | Mavjud bo'lmagan lidning to'g'ridan-to'g'ri havolasi xavfsiz «topilmadi» holati o'rniga integratsiyaning ichki xatosini chiqaradi.
+
+Muhimlik: P2, eski yoki noto'g'ri lid havolasi server xatosiga va texnik xabarga olib keladi; foydalanuvchi mavjud bo'lmagan yozuvni integratsiya nosozligidan ajrata olmaydi
+Holat: Yangi
+Sana: 30.07.2026
+
+Bog'liq test: TC-372, `lead` varianti
+
+Tavsif:
+Tizimda mavjud bo'lmagan, ammo formati to'g'ri UUID bilan lid kartasi
+ochilganda backend Google Sheetsga murojaat qiladi va HTTP 500 qaytaradi.
+Interfeys `Google Sheets amali bajarilmadi` texnik matnini ko'rsatadi.
+
+Eski havola, bookmark yoki noto'g'ri identifikator uchun yozuv topilmasligi
+kutiladigan holatdir. Bu ichki server xatosi emas, «topilmadi» holati sifatida
+qayta ishlanishi kerak.
+
+Qadamlar:
+1. Stagingga Super-admin sifatida kiring.
+2. `/dashboard/leads/00000000-0000-4000-8000-000000000000` to'g'ridan-to'g'ri
+   havolasini oching.
+3. Sahifa javobini kuting.
+4. DevTools → Network ichida
+   `GET /v1/leads/00000000-0000-4000-8000-000000000000` so'rovini tanlang.
+5. HTTP kodi, javob tanasi va interfeys xabarini tekshiring.
+
+Kutilgan natija:
+API HTTP 404 qaytaradi. Interfeys tushunarli «Lid topilmadi» yoki teng
+xavfsiz holatni ko'rsatadi, «Orqaga» tugmasini saqlaydi va integratsiyaning
+texnik tafsilotlarini oshkor qilmaydi.
+
+Haqiqiy natija:
+API `title: "Internal Server Error"` va
+`detail: "Google Sheets amali bajarilmadi"` bilan HTTP 500 qaytaradi.
+Interfeys «Lid topilmadi» holati o'rniga shu texnik matnni ogohlantirishda
+ko'rsatadi.
+
+Natija ikki xil tasodifiy UUID bilan avtotestda ikki marta takrorlandi va
+keyin Chromiumda qo'lda tasdiqlandi.
+
+Ilova:
+1. `Снимок экрана — 2026-07-30 в 17.15.59.png` — qo'lda tekshiruv:
+   sahifada texnik xabar, Network ichida HTTP 500 ko'rinadi.
+2. `autotests/tests/web/users/test_tc_372_missing_entities.py` avtotesti;
+   screenshot va trace faqat yiqilishda lokal saqlanadi.
+
+Qo'shimcha tekshiruv:
+1. Backendda lid yo'qligi va Google Sheets nosozligini alohida qayta ishlang.
+2. Mavjud bo'lmagan UUID uchun yagona API shartnomasiga ko'ra HTTP 404
+   qaytaring.
+3. Foydalanuvchiga tashqi integratsiyaning ichki matnini ko'rsatmang.
+4. Mavjud lid, mavjud bo'lmagan lid va haqiqiy Google Sheets nosozligini uchta
+   alohida holat sifatida tekshiring.
+5. Tuzatilgandan keyin TC-372 ning barcha to'rt variantini takrorlang.
+
+
+BUG-032. API saqlangan OnlinePBX `call_token` qiymatini ochiq matnda qaytaradi
+--------------------------------------------------------------------------------
+
+API | Backend, OnlinePBX, Super-admin | staging | Integratsiyaning saqlangan maxfiy kalitini list va detail API javoblaridan qayta olish mumkin.
+
+Muhimlik: P1, integratsiya siri brauzerga yuboriladi va DevTools, mijoz loglari, trace yoki kengaytmalarga tushishi mumkin; kalitning oshkor bo'lishi telefoniyaga ruxsatsiz kirish xavfini yaratadi
+Holat: Yangi
+Sana: 31.07.2026
+
+Bog'liq test: TC-209
+
+Tavsif:
+OnlinePBX ulangandan keyin backend API keyni `call_token` sifatida saqlaydi.
+Konfiguratsiya keyinchalik o'qilganda bu sir Super-admin uchun umumiy
+ro'yxat javobida ham, alohida konfiguratsiya javobida ham ochiq matnda
+qaytariladi.
+
+Interfeys modal oynada API keyni ko'rsatmaydi, ammo qiymat brauzerga yuborilgan
+va Network Response ichida mavjud. Frontendga ulanish holatini ko'rsatish
+uchun dastlabki sir kerak emas.
+
+Old shart:
+Stagingda ulangan OnlinePBX konfiguratsiyasi mavjud. Tekshiruv Super-admin
+ostida faqat ma'lumotlarni o'qish orqali bajariladi.
+
+Qadamlar:
+1. Stagingga Super-admin sifatida kiring.
+2. DevTools → Network oynasini ochib, so'rovlar ro'yxatini tozalang.
+3. ROP bo'limini oching yoki sahifani yangilang.
+4. `GET /v1/onlinepbx/configs` so'rovini tanlab, Response qismini tekshiring.
+5. Ulangan OnlinePBX modal oynasini oching.
+6. `GET /v1/onlinepbx/configs/{id}` so'rovini tanlab, Response qismini
+   tekshiring.
+7. Sirning haqiqiy qiymatini nusxalamang va e'lon qilmang.
+
+Kutilgan natija:
+`call_token` maydoni list va detail API javoblarida bo'lmaydi yoki asl API
+keyni tiklab bo'lmaydigan niqobni saqlaydi. Sir faqat konfiguratsiyani
+yaratish yoki aniq almashtirish paytida qabul qilinadi.
+
+Haqiqiy natija:
+Ikkala GET javobi ham bo'sh bo'lmagan, tiklash mumkin bo'lgan `call_token`
+qiymatini ochiq matnda saqlaydi. Qo'lda tekshiruv va avtotest maydon
+mavjudligini tasdiqladi, ammo qiymatning o'zi artefaktlarga yozilmadi.
+
+Ilova:
+1. 31.07.2026 kuni DevTools → Network orqali qo'lda tekshiruv: maydon list va
+   detail Response ichida topildi; qiymat ataylab ilova qilinmadi.
+2. `Снимок экрана — 2026-07-31 в 10.51.52.png` — OnlinePBX ulanish modal
+   oynasi API keyni ko'rsatmaydi, lekin backend uni brauzerga yuborgan.
+3. `autotests/tests/api/security/test_tc_209_onlinepbx_api_key_secrecy.py`
+   avtotesti; tekshiruv xabari sirning o'zi emas, faqat sizib chiqish joyi va
+   konfiguratsiya ID sini saqlaydi.
+
+Qo'shimcha tekshiruv:
+1. `call_token`ni barcha list va detail read-modellaridan chiqarib tashlang.
+2. Saqlangan sirni POST/PATCH javoblarida ham qaytarmang.
+3. Server, proxy va frontend loglari, error monitoring hamda tracelarda oldin
+   yozilgan qiymatlar bor-yo'qligini tekshiring.
+4. Tuzatilgandan keyin oshkor bo'lgan staging API keyni almashtiring.
+5. TC-209 ni takrorlang va test `xfail` o'rniga XPASS berishini hamda defekt
+   markerini olib tashlash kerakligini tekshiring.
+
+
+BUG-033. Ruscha kirish formasi noto'g'ri ma'lumotlar xatosini o'zbekcha ko'rsatadi
+----------------------------------------------------------------------------------
+
+Web — Chromium-compatible browser | Admin, kirish ekrani, rus tili | staging | Noto'g'ri kirishdan keyin lokalizatsiya qilingan ruscha forma backendning qayta ishlanmagan o'zbekcha matnini ko'rsatadi.
+
+Muhimlik: P2, xato asosiy kirish ekranida ko'rinadi va rus tilidagi foydalanuvchiga tushunarsiz; avtorizatsiya to'g'ri rad etiladi, shuning uchun kirish blokirovkasi yoki ma'lumot yo'qolishi yo'q
+Holat: Yangi
+Sana: 31.07.2026
+
+Bog'liq test: TC-259, `russian` varianti
+
+Tavsif:
+Rus tili tanlanganda kirish formasining sarlavhalari, maydonlari va tugmasi
+ruscha ko'rsatiladi. Ammo noto'g'ri hisob ma'lumotlari kiritilgandan keyin
+frontend backendning `login yoki parol noto'g'ri` xabarini o'zbekcha va qayta
+ishlanmagan holda chiqaradi.
+
+Bo'sh maydonlarning mijoz tomondagi xabarlari to'g'ri tarjima qilingan,
+o'zbekcha xato esa tanlangan o'zbek tiliga mos keladi. Nuqson rus lokalida
+server rad javobini qayta ishlashga tegishli.
+
+Qadamlar:
+1. Staging kirish sahifasini oching.
+2. Til almashtirgich orqali «Русский»ni tanlang.
+3. Mavjud bo'lmagan login va yetarli uzunlikdagi ixtiyoriy test parolini
+   kiriting.
+4. «Войти» tugmasini bosing.
+5. Forma ustidagi xabarni o'qing.
+
+Kutilgan natija:
+Rus lokalida xavfsiz ruscha «Неверный логин или пароль» yoki teng ma'noli
+xabar ko'rsatiladi. Javob login mavjudligini oshkor qilmaydi, raw JSON yoki
+boshqa lokal matnini ko'rsatmaydi.
+
+Haqiqiy natija:
+Forma ruscha qoladi, ammo alert o'zbekcha `login yoki parol noto'g'ri`
+matnini ko'rsatadi. Parol yashirin qoladi va kirish to'g'ri rad etiladi.
+
+Nuqson avtotestda takrorlandi va 31.07.2026 kuni qo'lda tasdiqlandi.
+
+Ilova:
+1. `Снимок экрана — 2026-07-31 в 11.40.25.png` — o'zbekcha alert ko'rsatilgan
+   ruscha forma; kiritilgan test qiymatlari hisobotga ko'chirilmaydi.
+2. `autotests/tests/web/localization/test_tc_259_login_errors.py` avtotesti;
+   screenshot va trace faqat yiqilishda lokal saqlanadi.
+
+Qo'shimcha tekshiruv:
+1. Backend to'liq matniga bog'lanmasdan, noto'g'ri kirishning ma'lum xato kodi
+   uchun lokalizatsiya qilingan ko'rsatishni qo'shing.
+2. Mavjud va mavjud bo'lmagan login uchun bir xil xavfsiz xabarni saqlang.
+3. Rate limit, deaktiv foydalanuvchi va API vaqtinchalik ishlamasligi xatolarini
+   rus va o'zbek tillarida tekshiring.
+4. Texnik JSON maydonlarini foydalanuvchiga tarjima qilmang va ko'rsatmang.
+5. Tuzatilgandan keyin TC-259 ning ikkala variantini takrorlang va ruscha
+   variant strict XPASS bergandan keyingina `xfail`ni olib tashlang.
+
+
+BUG-034. Parolni o'zgartirish oynasi ruscha interfeysda o'zbekcha qoladi
+------------------------------------------------------------------------------
+
+Web — Chromium | Admin, profil menyusi, rus tili | staging | Ruscha «Сменить пароль» tugmasi to'liq o'zbekcha dialog oynasini ochadi.
+
+Muhimlik: P2, foydalanuvchi parol kabi sezgir amal uchun kelishilgan ruscha interfeysni ololmaydi; vaqtinchalik yo'l — o'zbekcha yozuvlarni tushunish yoki tilni almashtirish
+Holat: Yangi
+Sana: 31.07.2026
+
+Bog'liq test: TC-261, `russian` varianti
+
+Tavsif:
+Rus tili tanlangan kabinetda profil menyusi «Сменить пароль» amalini to'g'ri
+ruscha ko'rsatadi. Tugma bosilgandan keyin parolni o'zgartirish komponenti
+joriy lokalni ishlatmaydi: sarlavha, uchta maydon, tugmalar va validatsiya
+xabarlari o'zbekcha hardcode qilingan.
+
+Oynaning o'zbekcha varianti izchil ko'rinadi va avtotestdan o'tadi. Til
+almashtirish va ruscha kabinetning boshqa elementlari ishlaydi, shuning uchun
+muammo alohida dialog bilan cheklangan.
+
+Qadamlar:
+1. Stagingga istalgan faol rol bilan kiring.
+2. Til almashtirgich orqali «Русский»ni tanlang.
+3. Profil menyusini oching.
+4. «Сменить пароль» tugmasini bosing.
+5. Sarlavha, maydon nomlari va tugmalarni tekshiring.
+6. Yangi parol va tasdiqqa turli test qiymatlarini kiriting, saqlamasdan
+   validatsiya xabarini tekshiring.
+
+Kutilgan natija:
+Rus tili tanlanganda butun oyna ruscha ko'rsatiladi: «Сменить пароль»,
+«Текущий пароль», «Новый пароль», «Повторите новый пароль», «Отмена»,
+«Сохранить» va «Пароли не совпадают». Qiymatlar mos kelmasa o'zgartiruvchi
+so'rov yuborilmaydi.
+
+Haqiqiy natija:
+Ruscha tugma `Parolni o'zgartirish`, `Eski parol`, `Yangi parol`,
+`Yangi parolni takrorlang`, `Bekor qilish`, `Saqlash` o'zbekcha matnli oynani
+ochadi. Mos kelmaslik validatsiyasi ham o'zbekcha qoladi. Parolni o'zgartirish
+POST so'rovi yuborilmadi.
+
+Nuqson avtotestda takrorlandi va 31.07.2026 kuni qo'lda tasdiqlandi.
+
+Ilova:
+1. 31.07.2026 kungi qo'lda tekshiruv; skrinshot ilova qilinmadi.
+2. `autotests/tests/web/localization/test_tc_261_change_password_dialog.py`
+   avtotesti; screenshot va trace faqat yiqilishda lokal saqlanadi.
+
+Qo'shimcha tekshiruv:
+1. Sarlavha, maydonlar, tugmalar, validatsiya va feedback matnlarini
+   i18n-resurslarga ko'chiring.
+2. Uchala rol uchun RU/UZ variantlarini tekshiring.
+3. Qisqa joriy/yangi parol va mos kelmaydigan tasdiqni tekshiring.
+4. Lokalizatsiya qilingan yozuvlar qayta chizilganda kiritilgan qiymatlar
+   yo'qolmasligiga ishonch hosil qiling.
+5. Tuzatilgandan keyin TC-261 ning ikkala variantini takrorlang va ruscha
+   variant strict XPASS bergandan keyingina `xfail`ni olib tashlang.
+
+
+BUG-035. O'zbekcha ulash oynasida OnlinePBX nomi kichik harf bilan boshlanadi
+--------------------------------------------------------------------------------
+
+Web — Chromium-compatible browser | Admin, Super-admin, ROP ro'yxati, o'zbek tili | staging | Ulanish oynasi sarlavhasida ro'yxatdan o'tgan `OnlinePBX` mahsulot nomi `onlinePBX` ko'rinishida chiqadi.
+
+Muhimlik: P3, ulash funksiyasi va forma ishlaydi, ammo mahsulot nomining registri noto'g'ri va interfeys bir xilligini buzadi
+Holat: Yangi
+Sana: 31.07.2026
+
+Bog'liq test: TC-263
+
+Tavsif:
+O'zbek tili tanlanganda OnlinePBX ulash oynasi ochiladi, maydonlar va amallar
+to'g'ri tarjima qilingan. Ammo sarlavhada mahsulot nomining birinchi harfi
+kichik bo'lib qoladi: `onlinePBX ulash`.
+
+Ruscha variantda `OnlinePBX` to'g'ri yozilgan, `Domain` va `API key` texnik
+nomlari ham buzilmagan. Nuqson faqat o'zbekcha sarlavhadagi mahsulot nomi
+registriga tegishli.
+
+Qadamlar:
+1. Stagingga Super-admin sifatida kiring.
+2. `O'zbekcha` tilini tanlang.
+3. ROP ro'yxatini oching.
+4. Istalgan ROPning OnlinePBX ustunidagi ulash tugmasini bosing.
+5. Ochilgan oyna sarlavhasini tekshiring.
+
+Kutilgan natija:
+Sarlavhada mahsulot nomi to'g'ri saqlanadi:
+`OnlinePBX ulash: <foydalanuvchi ismi>`.
+
+Haqiqiy natija:
+Sarlavha kichik harf bilan boshlanadi:
+`onlinePBX ulash: <foydalanuvchi ismi>`.
+
+Nuqson avtotestda takrorlandi va 31.07.2026 kuni qo'lda tasdiqlandi.
+
+Ilova:
+1. `Снимок экрана — 2026-07-31 в 12.04.15.png` — `onlinePBX ulash:
+   Ali Valiyev` sarlavhali o'zbekcha ulash oynasi.
+2. `autotests/tests/web/localization/test_tc_263_integrations_and_plans.py`
+   avtotesti; sirlar kiritilmaydi va konfiguratsiya saqlanmaydi.
+
+Qo'shimcha tekshiruv:
+1. Sarlavha tarjimasini `OnlinePBX ulash: {{name}}`ga tuzating.
+2. Jadval, avval ulangan konfiguratsiya oynasi, bildirishnomalar va
+   ko'rsatmalarda OnlinePBX yozilishini tekshiring.
+3. `Domain`, `API key` va `Webhook token` texnik atamalarini o'zgartirmang.
+4. Tariflar va integratsiyalar RU/UZ tekshiruvini sirlarni saqlamasdan
+   takrorlang.
+5. Tuzatilgandan keyin TC-263 ni takrorlang va strict XPASSdan keyin
+   `xfail`ni olib tashlang.
+
+
+BUG-036. Ruscha ish vaqti ekrani faol tanaffus xatosini o'zbekcha ko'rsatadi
+--------------------------------------------------------------------------------
+
+Web — Chromium-compatible browser | Admin, Operator, «Ish vaqti», rus tili | staging | Faol tanaffus vaqtida smenani tugatishga urinishda ruscha interfeys backendning qayta ishlanmagan o'zbekcha matnini ko'rsatadi.
+
+Muhimlik: P2, foydalanuvchi taqiqlangan amal sababini boshqa tilda oladi va smenani qanday to'g'ri tugatishni tushunmasligi mumkin; ma'lumot yo'qolmaydi va smena ochiq qoladi
+Holat: Yangi
+Sana: 31.07.2026
+
+Bog'liq test: TC-265
+
+Tavsif:
+Ruscha «Рабочее время» ekranida sarlavha, holat, taymer, tugmalar va smena
+tarixi ruscha chiqadi. Faol tanaffus paytida «Завершить смену» bosilsa,
+backend amalni HTTP 409 bilan to'g'ri rad etadi, ammo frontend `detail`
+maydonini tarjimasiz o'zbekcha ko'rsatadi:
+`smenani yopishdan oldin faol tanaffusni tugatish kerak`.
+
+O'zbek lokalida ushbu xabar tanlangan tilga mos keladi. Rad javobidan keyin
+smena holati o'zgarmaydi: tanaffus faol qoladi, uni tugatib, keyin smenani
+odatdagi tartibda yopish mumkin.
+
+Qadamlar:
+1. Stagingga faol Operator sifatida kiring.
+2. Rus tilini tanlang.
+3. «Рабочее время» bo'limini oching.
+4. Smenani boshlang.
+5. Tanaffusni boshlang.
+6. Tanaffusni tugatmasdan «Завершить смену» tugmasini bosing.
+7. Smena kartochkasi ustidagi xabarni o'qing.
+8. Tekshiruvdan keyin tanaffus va smenani tugating.
+
+Kutilgan natija:
+Ruscha interfeys tushunarli ruscha izohni ko'rsatadi, masalan:
+«Перед завершением смены завершите активный перерыв». Raw JSON va boshqa
+lokal matni ko'rsatilmaydi.
+
+Haqiqiy natija:
+O'zbekcha backend matni ko'rsatiladi:
+`smenani yopishdan oldin faol tanaffusni tugatish kerak`.
+Ekranning qolgan qismlari ruscha qoladi. So'rov HTTP 409 qaytaradi, shuning
+uchun smena noto'g'ri yopilmaydi va ma'lumot yo'qolmaydi.
+
+Nuqson avtotestda takrorlandi va 31.07.2026 kuni qo'lda tasdiqlandi.
+
+Ilova:
+1. `Снимок экрана — 2026-07-31 в 12.23.13.png` — faol tanaffus vaqtida
+   o'zbekcha alert ko'rsatilgan ruscha ish vaqti ekrani.
+2. `autotests/tests/web/localization/test_tc_265_server_errors.py`
+   avtotesti; alohida vaqtinchalik operatordan foydalanadi va smenasini
+   o'chiradi.
+
+Qo'shimcha tekshiruv:
+1. Barqaror konflikt kodini qaytaring yoki backendning ma'lum javobini
+   lokalizatsiya qilingan interfeys matniga moslang.
+2. Faol tanaffus vaqtida smenani tugatish holatini RU/UZ uchun tekshiring.
+3. Ochiq smenasiz tanaffusni boshlash yoki tugatishga urinishni tekshiring.
+4. Tanaffusni takroran boshlash va smenani takroran yopishni tekshiring.
+5. Raw JSON, boshqa lokal `detail` matni va texnik stack traceni
+   foydalanuvchiga ko'rsatmang.
+6. Tuzatilgandan keyin TC-265 ni takrorlang va strict XPASSdan keyin
+   `xfail`ni olib tashlang.
+
+
+BUG-037. Browser tab sarlavhalari o'zbekcha hardcode qilingan va tanlangan tilga moslashmaydi
+-------------------------------------------------------------------------------------------------
+
+Web — Chromium-compatible browser va Safari-compatible browser | Admin, barcha rollarning asosiy bo'limlari va kirish ekrani | staging | Ko'rinadigan ruscha sahifa sarlavhasi browser tabidagi o'zbekcha yoki texnik nom bilan mos kelmaydi.
+
+Muhimlik: P3, sahifalarning asosiy funksiyasi ishlaydi, ammo ko'p ochiq tab orasida kerakli sahifani topish qiyin, lokalizatsiya to'liq emas va kirish nomida texnik shablon bor
+Holat: Yangi
+Sana: 31.07.2026
+
+Bog'liq test: TC-266
+
+Tavsif:
+Rus tili tanlanganda asosiy bo'limlarning ko'rinadigan sarlavhalari va menyusi
+to'g'ri tarjima qilinadi, lekin sahifa `<title>` qiymati o'zbekcha hardcode
+qilinganicha qoladi. Tilni reloadsiz almashtirish ham tab nomini yangilamaydi.
+
+Kirish ekrani esa har ikkala tilda ham ruscha yoki o'zbekcha interfeysga mos
+kelmaydigan `Sign in | Jwt` texnik shablonini ko'rsatadi.
+
+Qadamlar:
+1. Stagingga kiring va rus tilini tanlang.
+2. «Тарифы» bo'limini oching.
+3. Ko'rinadigan sahifa sarlavhasi va browser tab nomini solishtiring.
+4. Tegishli rollarda «Лиды», «Рабочее время», «Посещаемость» va «Звонки»
+   bo'limlari uchun takrorlang.
+5. Bitta tabni o'zbek tiliga o'tkazing va `<title>`ni yana tekshiring.
+6. Kirish sahifasini rus va o'zbek tillarida ochib, tab nomini tekshiring.
+
+Kutilgan natija:
+Tab nomi tanlangan til va ko'rinadigan bo'limga mos keladi, masalan ruscha
+uchun `Тарифы - Operator AI`, o'zbekcha uchun `Tariflar - Operator AI`.
+Kirish sahifasida `Вход - Operator AI` / `Kirish - Operator AI` kabi
+lokalizatsiya qilingan foydalanuvchi nomi ishlatiladi.
+
+Haqiqiy natija:
+Rus tilida quyidagi juftliklar olindi:
+
+- `Тарифы` → `Tariflar - Operator AI`;
+- `Лиды` → `Lidlar - Operator AI`;
+- `Рабочее время` → `Ish vaqti - Operator AI`;
+- `Посещаемость` → `Davomat - Operator AI`;
+- `Звонки` → `Qo'ng'iroqlar - Operator AI`.
+
+Kirish ekrani RU va UZ da `Sign in | Jwt - Operator AI`ni ko'rsatadi.
+O'zbekcha dashboard sarlavhalari hozirgi hardcode qiymatlarga mos keladi.
+
+Nuqson avtotestda takrorlandi va 31.07.2026 kuni qo'lda tasdiqlandi.
+
+Ilova:
+1. `Снимок экрана — 2026-07-31 в 12.29.51.png` — tabi ruscha «Тарифы»
+   sahifasi va `Tariflar - Operator AI` tab nomi.
+2. `autotests/tests/web/localization/test_tc_266_browser_titles.py`
+   avtotesti; barcha farqlarni bitta hisobotga yig'adi va ma'lumotlarni
+   o'zgartirmaydi.
+
+Qo'shimcha tekshiruv:
+1. Barcha route browser title qiymatlarini i18nga o'tkazing va til reloadsiz
+   o'zgarganda yangilang.
+2. Uchala rol va bo'limlar orasidagi to'g'ridan-to'g'ri o'tishlarni
+   tekshiring.
+3. Kirish, 404, operator, lid va qo'ng'iroq detail sahifalarini tekshiring.
+4. Router texnik shablonlarisiz mahsulot nomining yagona suffixini saqlang.
+5. Detail-title ichidagi foydalanuvchi ma'lumotlari xavfsiz escape qilinishiga
+   ishonch hosil qiling.
+6. Tuzatilgandan keyin TC-266 ni takrorlang va strict XPASSdan keyin
+   `xfail`ni olib tashlang.
+
+
+BUG-038. Smena tarixida tugallangan tanaffus davomiyligi ko'rsatilmaydi
+--------------------------------------------------------------------------------
+
+Web — Chromium-compatible browser | Admin, Operator, «Ish vaqti» | staging | Tanaffus tugatilib sahifa yangilangandan keyin tarix boshlanish va tugash vaqtini ko'rsatadi, ammo hisoblangan davomiylikni ko'rsatmaydi.
+
+Muhimlik: P3, boshlanish va tugash vaqti saqlangan, ammo Operator har bir tanaffus davomiyligini o'zi hisoblashi kerak
+Holat: Yangi
+Sana: 31.07.2026
+
+Bog'liq test: TC-277
+
+Tavsif:
+«Bugungi seans» blokida tugallangan tanaffus vaqt oralig'i va umumiy
+«перерыв» matni bilan ko'rsatiladi. Tanaffus tugatilgan zahoti ham, reload
+qilingandan keyin ham daqiqalar soni yo'q.
+
+Haftalik API intervalning boshlanishi va tugashini hamda umumiy
+`break_duration_seconds` qiymatini saqlaydi, ammo `breaks` ichidagi alohida
+elementda `duration_seconds` yo'q. Hozirgi frontend `перерыв (N мин)` matnini
+faqat shu maydon bo'lsa qo'shadi va `started_at` / `ended_at` orasidagi vaqtni
+o'zi hisoblamaydi.
+
+Qadamlar:
+1. Stagingga faol Operator sifatida kiring.
+2. «Ish vaqti» bo'limini ochib smenani boshlang.
+3. Tanaffusni boshlang va sezilarli vaqt kuting.
+4. «Tanaffusni tugatish» tugmasini bosing.
+5. Sahifani yangilang.
+6. «Bugungi seans» blokidagi tanaffus satrini tekshiring.
+
+Kutilgan natija:
+Satr boshlanish, tugash va davomiylikni ko'rsatadi, masalan:
+`12:22–14:34 · перерыв (132 мин)`. Davomiylik boshlanish va tugash orasidagi
+farqqa hamda umumiy tanaffus vaqtiga mos keladi.
+
+Haqiqiy natija:
+Reload qilingandan keyin faqat `12:22–14:34 · перерыв` ko'rsatiladi.
+Daqiqalar soni yo'q. Qo'lda olingan skrinshotda smena allaqachon tugagan,
+ammo tarix va umumiy ish taymeri saqlangan; demak muammo smenaning faol
+holatiga bog'liq emas.
+
+Nuqson avtotestda takrorlandi va 31.07.2026 kuni qo'lda tasdiqlandi.
+
+Ilova:
+1. `Снимок экрана — 2026-07-31 в 21.12.30.png` — `12:22–14:34 · перерыв`
+   satri davomiyliksiz ko'rsatilgan tugallangan smena.
+2. `autotests/tests/web/operator_work/test_tc_277_finish_break.py`
+   avtotesti; vaqtinchalik smena va Operator testdan keyin o'chiriladi.
+
+Qo'shimcha tekshiruv:
+1. Har bir interval uchun `duration_seconds` qaytaring yoki frontendda
+   `started_at` va `ended_at` bo'yicha davomiylikni hisoblang.
+2. Bir daqiqadan qisqa va bir soatdan uzun tanaffuslarni tekshiring.
+3. Bir nechta tanaffus va ularning yig'indisi `break_duration_seconds`ga mos
+   kelishini tekshiring.
+4. RU/UZ hamda smena tugashidan oldingi va keyingi holatlarni tekshiring.
+5. Tuzatilgandan keyin TC-277 ni takrorlang va strict XPASSdan keyingina
+   `xfail`ni olib tashlang.
+
+
+BUG-039. Bugungi smena tugagandan keyin ishlamaydigan «Smenani boshlash» tugmasi faol qoladi
+------------------------------------------------------------------------------------------------
+
+Web — Chromium-compatible browser | Admin, Operator, «Ish vaqti» | staging | Bugungi tugallangan smena qayta boshlash uchun faol tugma bilan birga ko'rsatiladi, ammo server amalni taqiqlab HTTP 409 qaytaradi.
+
+Muhimlik: P2, ekranning asosiy amali Operatorni chalg'itadi va kafolatlangan xato bilan tugaydi; server smena yakunini himoya qilgani uchun ma'lumot takrorlanmaydi va buzilmaydi
+Holat: Yangi
+Sana: 31.07.2026
+
+Bog'liq test: TC-282
+
+Tavsif:
+Smena tugatilgandan keyin ekran «Не работает» holatini, yakuniy taymerni va
+«смена завершена» satrini to'g'ri ko'rsatadi. Ammo yakun ostida faol yashil
+«Начать смену» tugmasi qoladi.
+
+Tugma bosilganda frontend takroriy `POST /v1/operator-work/shift` yuboradi.
+Backend bir sana uchun faqat bitta smenaga ruxsat bergani sabab HTTP 409 bilan
+to'g'ri rad etadi. Ikkinchi yozuv yaratilmaydi, boshlanish, tugash va yakuniy
+davomiyliklar o'zgarmaydi. Demak nuqson UI holatida: interfeys amaldagi
+biznes-qoida bo'yicha bajarib bo'lmaydigan amalni taklif qiladi.
+
+Qadamlar:
+1. Stagingga faol Operator sifatida kiring.
+2. «Ish vaqti» bo'limini oching.
+3. Bugungi smenani boshlang va tugating.
+4. Sahifani yangilang.
+5. Holat «Не работает» ekanini va tarixda tugash satri borligini tekshiring.
+6. Taymer ostidagi asosiy tugmani tekshiring.
+7. «Начать смену»ni bir marta bosing, javob va haftalik ma'lumotni tekshiring.
+
+Kutilgan natija:
+Ekran bugungi smena tugaganini aniq bildiradi va qayta boshlash uchun faol
+tugma ko'rsatmaydi. To'g'ridan-to'g'ri takroriy POST 409 qaytaradi, yopilgan
+smena va uning yakunlari o'zgarmaydi.
+
+Haqiqiy natija:
+Bugungi smena allaqachon tugagan bo'lsa ham faol «Начать смену» tugmasi
+ko'rsatiladi. Tugma bosilganda oldindan ma'lum HTTP 409 olinadi. Xatodan keyin
+weekly API ichida aynan bitta yopilgan smena qoladi va uning saqlangan
+maydonlari o'zgarmaydi.
+
+Nuqson avtotestda takrorlandi va 31.07.2026 kuni qo'lda tasdiqlandi.
+
+Ilova:
+1. `Снимок экрана — 2026-07-31 в 21.12.30.png` — tugallangan bugungi smena,
+   «Не работает» holati va faol «Начать смену» tugmasi bir vaqtda ko'rsatilgan.
+2. `autotests/tests/web/operator_work/test_tc_282_closed_shift_cannot_reopen.py`
+   avtotesti; alohida vaqtinchalik Operatordan foydalanadi va smenasini
+   o'chiradi.
+
+Qo'shimcha tekshiruv:
+1. Bugungi smena yopilgandan keyin «Начать смену»ni yashiring yoki bloklang.
+2. Joriy sana uchun ish kuni tugaganini aniq matn bilan ko'rsating.
+3. Yopilgandan keyingi, reload va qayta kirish holatlarini tekshiring.
+4. To'g'ridan-to'g'ri takroriy POST uchun serverdagi 409 himoyasini saqlang.
+5. Sana chegarasini tekshiring: keyingi kuni yangi smena odatdagidek ochilishi
+   kerak.
+6. Tuzatilgandan keyin TC-282 ni takrorlang va strict XPASSdan keyingina
+   `xfail`ni olib tashlang.
+
+
+BUG-040. Ikki tabdagi bir vaqtdagi amal smena yoki tanaffusni darhol bekor qiladi
+----------------------------------------------------------------------------------
+
+Web — Chromium-compatible browser | Admin, Operator, «Ish vaqti», ikkita tab | staging | Ikki tabda deyarli bir vaqtda bitta toggle amali bosilganda xavfsiz konflikt o'rniga ikkala qarama-qarshi amal bajariladi.
+
+Muhimlik: P1, smenani ikki marta boshlash uni darhol yopadi va Operator shu sana uchun ish kunini qayta ocha olmaydi; ish vaqtini hisobga olish keyingi sanagacha bloklanadi, tanaffusni ikki marta boshlash esa noto'g'ri nol interval yaratadi
+Holat: Yangi
+Sana: 02.08.2026
+
+Bog'liq test: TC-285
+
+Tavsif:
+Smena va tanaffus endpointlari toggle sifatida ishlaydi: bitta amal joriy
+holatga qarab qarama-qarshi ma'noga ega. Operatorning ikki tabi bir xil
+boshlang'ich holatni ko'rsatadi va bir tugmani deyarli bir vaqtda bosishga
+ruxsat beradi.
+
+Backend ikkala so'rovni ham HTTP 200 bilan qabul qiladi. Birinchi `POST shift`
+smenani ochadi, ikkinchisi esa darhol uni tugatish deb talqin qilinadi.
+Natijada `shift_started_at` va `shift_closed_at` soniyagacha bir xil bo'ladi.
+Shu sana uchun smenani qayta ochib bo'lmaydi.
+
+Xuddi shunday, birinchi `POST break` tanaffusni boshlaydi, ikkinchisi uni
+darhol tugatadi. Bitta faol tanaffus o'rniga weekly API bir xil `started_at`
+va `ended_at`, `break_count = 1` hamda `break_duration_seconds = 0` bo'lgan
+tugallangan intervalni qaytaradi.
+
+Smena uchun qadamlar:
+1. Bugungi smenasi yo'q Operator sifatida stagingga kiring.
+2. «Ish vaqti»ni ikki tabda oching.
+3. Ikkala tab ham «Не работает» va «Начать смену»ni ko'rsatayotganini
+   tekshiring.
+4. Ikkala tabda «Начать смену»ni deyarli bir vaqtda bosing.
+5. Ikkala tabni yangilang va weekly APIni so'rang.
+
+Tanaffus uchun qadamlar:
+1. Boshqa vaqtinchalik Operator uchun faol tanaffussiz smena oching.
+2. «Ish vaqti»ni ikki tabda oching.
+3. Ikkala tabda «Перерыв»ni deyarli bir vaqtda bosing.
+4. Ikkala tabni yangilang va weekly APIni so'rang.
+
+Kutilgan natija:
+Birinchi so'rov amalni bajaradi. Ikkinchi konflikt so'rovi xavfsiz rad etiladi
+yoki erishilgan holatni idempotent tasdiqlaydi. Ikki tabdan keyin bitta ochiq
+smena yoki bitta faol tanaffus mavjud bo'ladi; reload qilinganda ikkala tab
+bir xil server holatini ko'rsatadi.
+
+Haqiqiy natija:
+Ikkala ssenariyda ham ikki javob HTTP 200:
+
+- smena bir soniyada ochiladi va yopiladi, ish vaqti nol bo'ladi;
+- tanaffus bir soniyada boshlanadi va tugaydi, `break_count = 1`, davomiylik
+  nolga teng.
+
+Ikkinchi yozuv yaratilmaydi, ammo birinchi amal ikkinchi toggle bilan bekor
+qilinadi.
+
+Nuqson avtotestda takrorlandi va 02.08.2026 kuni qo'lda tasdiqlandi.
+
+Ilova:
+1. `autotests/tests/web/operator_work/test_tc_285_two_tabs_toggle.py`
+   avtotesti; ikkala variant ham alohida vaqtinchalik Operatorlardan
+   foydalanadi va smenalarni o'chiradi.
+2. Smena diagnostikasi: javoblar `[200, 200]`, `shift_started_at` va
+   `shift_closed_at` bir xil.
+3. Tanaffus diagnostikasi: javoblar `[200, 200]`, `started_at` va `ended_at`
+   bir xil, davomiylik 0 soniya.
+
+Qo'shimcha tekshiruv:
+1. Toggleni boshlash va tugatish uchun aniq idempotent buyruqlarga almashtiring
+   yoki optimistic locking/idempotency key qo'shing.
+2. Eskirgan holat uchun qarama-qarshi amalsiz tushunarli HTTP 409 qaytaring.
+3. Ikki tab, ikki browser va bitta Operatorning ikki qurilmasini tekshiring.
+4. Turli tarmoq kechikishlaridagi deyarli bir vaqtdagi so'rovlarni tekshiring.
+5. Bitta tabdagi takroriy click ham amalni bekor qilmasligini tekshiring.
+6. Tuzatilgandan keyin TC-285ning ikkala parametrini takrorlang va strict
+   XPASSdan keyingina `xfail`ni olib tashlang.
+
+
+BUG-041. Demo-forma harfli va juda qisqa telefon raqamini yuboradi
+-----------------------------------------------------------------
+
+Web — Chromium-compatible browser | Landing, «Demo so'rash» formasi | joriy landingning lokal buildi | Noto'g'ri `12ab` telefoni browser validationdan o'tib, ariza sifatida yuboriladi.
+
+Muhimlik: P1, ochiq forma qayta aloqa uchun yaroqsiz raqamli arizani qabul qiladi; bunday lidni ishlab bo'lmaydi va noto'g'ri ma'lumot savdo kanaliga tushadi
+Holat: Yangi
+Sana: 02.08.2026
+
+Bog'liq test: TC-318
+
+Tavsif:
+Telefon maydoni majburiy bo'lib, faqat raqam, `+`, bo'sh joy, qavs va defisdan
+iborat kamida to'qqiz belgili qiymatni qabul qilishi kerak bo'lgan HTML
+`pattern`ga ega. Joriy Chromiumda ifoda to'g'ri pattern sifatida
+kompilyatsiya qilinmaydi, shu sabab browserning ichki tekshiruvi ishlamaydi.
+
+`12ab` qiymati submitni bloklamaydi. Tugma yuborish holatiga o'tadi,
+`POST /v1/leads` bajariladi va xavfsiz lokal endpoint `Yuborilmadi`ni
+ko'rsatadi. Lokal endpoint lidlarni ataylab saqlamaydi, shuning uchun yuborish
+xatosi kutilgan. Nuqson noto'g'ri telefon bilan POST bajarilganining o'zi bilan
+tasdiqlanadi. To'g'ri telefon ham shu lokal endpointda `Yuborilmadi` ko'rsatishi
+validation nuqsoniga aloqador emas.
+
+Qadamlar:
+1. Landingning joriy lokal buildini ochib demo-formaga o'ting.
+2. Ismga `TC318`, kompaniyaga `Test` kiriting.
+3. Telefonga `12ab` kiriting.
+4. «Demo so'rash»ni bosing.
+5. Forma holati va Networkdagi `POST /v1/leads`ni tekshiring.
+
+Kutilgan natija:
+Browser submitni bloklaydi, fokus telefon maydonida qoladi va noto'g'ri format
+xabari ko'rsatiladi. Tarmoq so'rovi yuborilmaydi.
+
+Haqiqiy natija:
+Forma `telefon_raqam: "12ab"` bilan ariza yuborishga urinadi va tarmoq
+so'rovi natijasini ko'rsatadi. Maydon yonida format xatosi yo'q.
+
+Nuqson avtotestda takrorlandi va 02.08.2026 kuni qo'lda tasdiqlandi.
+
+Ilova:
+1. `Снимок экрана — 2026-08-02 в 22.16.39.png` — `12ab` telefoni va
+   `Yuborilmadi` natijasi ko'rsatilgan demo-forma.
+2. `autotests/tests/web/landing/test_tc_314_tc_323_demo_leads.py::test_tc_318_phone_pattern_rejects_letters_and_too_short_number`
+   avtotesti.
+
+Qo'shimcha tekshiruv:
+1. Zamonaviy browser sintaksisiga mos HTML pattern yozing yoki fetchdan oldin
+   aniq schema-validation bajaring.
+2. Faqat browserga tayanmasdan backendda ham formatni tekshiring.
+3. Qisqa raqam, harf, emoji, bo'sh joy, qavs va to'g'ri
+   `+998 xx xxx xx xx` variantlarini tekshiring.
+4. Tuzatilgandan keyin TC-318 ni takrorlang va strict XPASSdan keyingina
+   `xfail`ni olib tashlang.
+
+
+BUG-042. Tez ikki marta bosish ikkita bir xil demo-ariza yuboradi
+----------------------------------------------------------------
+
+Web — Chromium-compatible browser | Landing, «Demo so'rash» formasi | joriy landingning lokal buildi | Tugmaning disabled holati yangilanishidan oldingi ikki tez click bir xil body bilan ikkita `POST /v1/leads` bajaradi.
+
+Muhimlik: P1, bitta foydalanuvchi savdo navbatini buzadigan va qo'lda deduplikatsiya talab qiladigan takroriy lidlar yaratadi; qayta ishlansa mijozga bir necha marta murojaat qilinishi mumkin
+Holat: Yangi
+Sana: 02.08.2026
+
+Bog'liq test: TC-321
+
+Tavsif:
+Yuborish boshlangach React tugmani disabled holatga o'tkazadi, ammo submit
+handlerda qayta kirishni sinxron bloklaydigan himoya yo'q. Ikki click render
+yangilanishidan oldin sodir bo'lsa, ikkala hodisa ham fetchni ishga tushiradi.
+
+Networkda bir xil JSONli ikkita `POST /v1/leads` paydo bo'ladi. Xavfsiz lokal
+endpoint 404 qaytargani uchun forma `Yuborilmadi`ni ko'rsatadi; bu 404 kutilgan
+va nuqsonga aloqador emas. Nuqson — bitta double clickdan ikkita so'rov ketishi.
+
+Qadamlar:
+1. Landingning joriy lokal buildi va demo-formani oching.
+2. DevTools → Networkda `leads` filtri qo'ying.
+3. Majburiy maydonlarni to'g'ri ma'lumot bilan to'ldiring.
+4. «Demo so'rash»ni juda tez ikki marta bosing.
+5. `POST /v1/leads` soni va bodylarini solishtiring.
+
+Kutilgan natija:
+Birinchi submit takroriy yuborishni darhol bloklaydi. Double clickdan qat'i
+nazar Networkda faqat bitta POST bo'ladi.
+
+Haqiqiy natija:
+Bir xil ism, telefon, kompaniya va CRM bilan ikkita POST bajariladi.
+
+Nuqson avtotestda takrorlandi va 02.08.2026 kuni qo'lda tasdiqlandi.
+
+Ilova:
+1. Network qo'lda diagnostikasi: tez double clickdan keyin ikkita bir xil
+   `POST /v1/leads`.
+2. `autotests/tests/web/landing/test_tc_314_tc_323_demo_leads.py::test_tc_321_double_submit_creates_only_one_request`
+   avtotesti.
+
+Qo'shimcha tekshiruv:
+1. Submit boshida, birinchi awaitdan oldin, sinxron ref/mutex qo'llang va
+   so'rov tugaguncha takroriy chaqiruvni e'tiborsiz qoldiring.
+2. Ikkinchi himoya sifatida idempotency key va server deduplikatsiyasini
+   qo'shing.
+3. Mouse double click, Enter, touch va sekin tarmoqni tekshiring.
+4. Tuzatilgandan keyin TC-321 ni takrorlang va strict XPASSdan keyingina
+   `xfail`ni olib tashlang.
+
+
+BUG-043. ROP boshqa kompaniya Operatorining presence ma'lumotini olishi mumkin
+-----------------------------------------------------------------------------
+
+API | Admin, ROP, `GET /v1/operator-work/presence` | staging | Begona Operator UUIDsi yuborilganda endpoint tenant taqiqi o'rniga uning obyekti va online holatini qaytaradi.
+
+Muhimlik: P1, tenant izolyatsiyasi buzilgan: bir kompaniya foydalanuvchisi boshqa kompaniya xodimi mavjudligini va presence holatini bilishi mumkin; yangi heartbeat bo'lsa faoliyat vaqti ham ochiladi
+Holat: Yangi
+Sana: 02.08.2026
+
+Bog'liq test: TC-292
+
+Tavsif:
+Tekshiruv uchun o'z Operatoriga ega vaqtinchalik ikkinchi ROP yaratiladi. A
+kompaniyasidagi ROP `operator_ids` orqali B kompaniyasidagi Operatorning
+presence ma'lumotini so'raydi. Backend UUID joriy ROPga tegishli ekanini
+tekshirmaydi va begona Operator elementi bilan HTTP 200 qaytaradi.
+
+Qo'lda tekshiruvda javob begona `operator_id` va `online: false`ni ko'rsatdi.
+`last_seen_at` bo'lmasa ham endpoint foydalanuvchi mavjudligini tasdiqlaydi va
+presence holatini ochadi. Yangi heartbeat bo'lsa oxirgi faoliyat vaqti ham
+ochilishi mumkin.
+
+Qadamlar:
+1. Alohida kompaniyalardagi ROP A va ROP Bni tayyorlang.
+2. ROP B kompaniyasida Operator B yarating va UUIDsini oling.
+3. ROP A tokeni bilan avtorizatsiya qiling.
+4. `GET /v1/operator-work/presence?operator_ids=<Operator B UUID>` yuboring.
+5. HTTP status va `items`ni tekshiring.
+
+Kutilgan natija:
+Backend 403 yoki bo'sh `items` qaytaradi. Begona Operatorning presence va
+`last_seen_at` ma'lumoti ochilmaydi.
+
+Haqiqiy natija:
+HTTP 200 begona Operator obyektini qaytaradi:
+`{"operator_id":"ee359131-d857-4810-9470-b6c0d31c9a81","online":false}`.
+
+Nuqson avtotestda takrorlandi va 02.08.2026 kuni qo'lda ishga tushirish bilan
+tasdiqlandi. Vaqtinchalik ROP va Operator teardown orqali o'chirildi.
+
+Ilova:
+1. Qo'lda pytest natijasi: `1 failed, 177 deselected`, assertion begona
+   Operatorning presence ma'lumoti olinganini ko'rsatadi.
+2. `autotests/tests/api/operator_work/test_tc_291_tc_297_work_permissions.py::test_tc_292_rop_cannot_read_foreign_operator_presence`
+   avtotesti.
+
+Qo'shimcha tekshiruv:
+1. Presence tanlovini joriy `company_id/rop_id` Operatorlari bilan cheklang.
+2. Bitta va aralash UUID, offline/online hamda noma'lum UUIDni tekshiring.
+3. Mavjud begona UUID uchun farqlanadigan javob bermang.
+4. Tuzatilgandan keyin TC-292 ni takrorlang va strict XPASSdan keyingina
+   `xfail`ni olib tashlang.
+
+
+BUG-044. Smenani avtomatik yopish faol tanaffusni tarixda ochiq qoldiradi
+----------------------------------------------------------------------------
+
+Backend — ish vaqtini hisobga olish, auto-close scheduler | staging/current backend contract | Unutilgan smena yopilganda tanaffus yakuni hisoblanadi, ammo tegishli `operator_workday_breaks` satri `ended_at` olmaydi.
+
+Muhimlik: P1, bitta smenada qarama-qarshi ma'lumot paydo bo'ladi: umumiy tanaffus davomiyligi yopilgan, lekin tafsilotda interval ochiq qoladi; hisobot va UI joriy holatni noto'g'ri talqin qilishi mumkin
+Holat: Yangi
+Sana: 02.08.2026
+
+Bog'liq test: TC-303
+
+Tavsif:
+Scheduler oldingi kunlardagi tugatilmagan smenalarni Asia/Tashkent bo'yicha
+23:59:59 da yopadi. SQL `shift_closed_at`ni to'g'ri o'rnatadi, faol tanaffus
+davomiyligini `break_duration_seconds`ga qo'shadi va `operator_workdays`
+ichidagi `active_break_started_at`ni tozalaydi.
+
+Ammo so'rov `operator_workday_breaks` jadvalini yangilamaydi. Faol tanaffus
+satri `ended_at = NULL` bilan qoladi. Summary smena va tanaffus tugaganini
+ko'rsatsa ham, shu smena tarixi ochiq intervalni saqlaydi.
+
+Contractni tekshirish qadamları:
+1. `db/query/queries/operator_work.sql` faylini oching.
+2. `CloseStaleOperatorShifts` so'rovini toping.
+3. `operator_workdays` yangilanishi va `active_break_started_at` tozalanishini
+   tekshiring.
+4. Tegishli `operator_workday_breaks.ended_at` yangilanishini tekshiring.
+
+Funksional ssenariy:
+1. Yarim tundan oldin smena va tanaffusni boshlang.
+2. Ularni qo'lda tugatmang.
+3. Keyingi kun scheduler ishlashini kuting.
+4. Smena summarysi va weekly APIdagi `breaks`ni solishtiring.
+
+Kutilgan natija:
+Smena va faol tanaffus bir xil 23:59:59 vaqtida yopiladi. Summary va tarixdagi
+intervallar o'zaro mos bo'ladi.
+
+Haqiqiy natija:
+`operator_workdays` yopiladi va tanaffus yakuni qo'shiladi, ammo
+`operator_workday_breaks` satrining `ended_at` maydoni bo'sh qoladi.
+
+Nuqson contract avtotestida takrorlandi va 02.08.2026 kuni SQLni qo'lda
+tekshirish bilan tasdiqlandi.
+
+Ilova:
+1. `CloseStaleOperatorShifts`ning qo'lda chiqarilgan matni: faqat
+   `operator_workdays` yangilanadi, keyin alohida `CreateOperatorWorkdayBreak`
+   boshlanadi.
+2. `autotests/tests/api/operator_work/test_tc_302_tc_305_autoclose_contract.py::test_tc_303_autoclose_finishes_active_break_and_history_interval`
+   avtotesti.
+
+Qo'shimcha tekshiruv:
+1. Ochiq break history satrini smena bilan bir xil vaqtda bitta transactionda
+   yoping.
+2. Bir nechta eski smena, schedulerning takroriy idempotent ishga tushishi va
+   faol tanaffussiz smenani tekshiring.
+3. Auto-closedan keyingi weekly API va UIni tekshiring.
+4. Tuzatilgandan keyin TC-303 ni takrorlang va strict XPASSdan keyingina
+   `xfail`ni olib tashlang.
+
+
+BUG-045. Sahifalashdan keyingi qo'ng'iroq filtri mavjud yozuvlarni yashiradi
+----------------------------------------------------------------------------
+
+API / Web — Chromium-compatible browser | Backend API OnlinePBX / Admin, ROP, Operator kartochkasi | staging | Qo'ng'iroqlar mavjud bo'lsa ham tarixning birinchi sahifasi bo'sh natija qaytaradi; kattaroq `perPage` yoki keyingi sahifalar shu yozuvlarni ko'rsatadi.
+
+Muhimlik: P2, ROP Operator kartochkasida qo'ng'iroq yozuvlari va tafsilotlariga kira olmaydi; ma'lumot o'chmaydi va kattaroq `perPage` bilan aylanma so'rov orqali olinadi
+Holat: Yangi
+Sana: 03.08.2026
+
+Bog'liq testlar: TC-060, TC-370
+
+Tavsif:
+`GET /v1/onlinepbx/events` PostgreSQLdan `LIMIT/OFFSET` qo'llangan sahifani
+oladi, keyin usecase ichida tanlangan voronka lidlarining telefonlari bo'yicha
+elementlarni filtrlaydi. Filtrlashdan keyin backend `totalItems`ni faqat joriy
+sahifada qolgan elementlar soni bilan almashtiradi.
+
+Shu sabab bir xil `operator_id` natijasi sahifa hajmiga bog'liq. Stagingda
+`page=1&perPage=6` bo'sh `items`, `totalItems=0` va `totalPages=0` qaytardi,
+ammo `perPage=30/100` so'rovlari mavjud qo'ng'iroqlarni qaytardi. Oltitadan
+qo'lda sahifalashda mos elementlar 2–4-sahifalarda topildi, lekin bo'sh birinchi
+sahifa metama'lumotlari clientga bu sahifalar mavjudligini bildirmaydi.
+
+Operator kartochkasi aynan oltita so'nggi eventni so'raydi. Natijada u
+«qo'ng'iroq yozuvlari yo'q» holatini ko'rsatadi, TC-060 va TC-370 esa mos
+ravishda BUG-027 va BUG-026 tekshiruvigacha yetib bormaydi.
+
+Qadamlar:
+1. Stagingga ROP sifatida kiring va qo'ng'iroq tarixiga ega o'z Operatorining
+   UUIDsini oling.
+2. Shu `operator_id` filtri, `page=1` va `perPage=6` bilan
+   `GET /v1/onlinepbx/events` yuboring.
+3. Xuddi shu so'rovni `perPage=30`, keyin `perPage=100` bilan takrorlang.
+4. `items`, `totalItems` va `totalPages`ni solishtiring.
+5. Qo'shimcha ravishda `perPage=6` bilan 2–4-sahifalarni so'rang.
+6. Shu Operator kartochkasini ochib «Qo'ng'iroq yozuvlari» blokini tekshiring.
+
+Kutilgan natija:
+Tanlangan voronka filtri sahifalashdan oldin to'liq ruxsat etilgan tanlovga
+qo'llanadi. `page=1&perPage=6` mavjud mos qo'ng'iroqlarning dastlabki oltitasini
+yoki undan kamini qaytaradi. `totalItems` `perPage`ga bog'liq bo'lmaydi,
+`totalPages` esa to'liq filtrlangan yozuvlar sonidan to'g'ri hisoblanadi.
+
+Haqiqiy natija:
+Bir xil filtr uchun:
+
+- Operator №2: `perPage=6` — 0 element, `perPage=30/100` — 4;
+- Operator №4: `perPage=6` — 0 element, `perPage=30` — 2,
+  `perPage=100` — 9;
+- oltitadan qo'lda sahifalashda Operator №2 elementlari 2–3-sahifalarda,
+  Operator №4 elementlari 4-sahifada paydo bo'ldi;
+- bo'sh birinchi sahifa `totalItems=0` va `totalPages=0` deb xabar berdi.
+
+Nuqson 03.08.2026 kuni takroriy API so'rovi va backend kodini solishtirish
+bilan tasdiqlandi. Tekshiruv stagingdagi qo'ng'iroq, foydalanuvchi yoki
+sozlamalarni o'zgartirmadi.
+
+Ilova:
+1. UUID, telefon va boshqa shaxsiy ma'lumotlarsiz `perPage=6/30/100`
+   taqqoslash diagnostikasi.
+2. `autotests/tests/api/operations/test_bug_045_onlinepbx_events_pagination.py::test_bug_045_onlinepbx_event_page_size_does_not_hide_calls`
+   avtotesti.
+
+Qo'shimcha tekshiruv:
+1. Tanlangan voronka filtrini `LIMIT/OFFSET`dan oldingi ma'lumot so'roviga
+   ko'chiring va xuddi shu shartlarni `COUNT(*)`ga qo'llang.
+2. ROP va Operator, `operator_id` va `deal_id` filtrlari, bo'sh va oxirgi
+   sahifalarni tekshiring.
+3. `perPage=1/6/30/100` hamda yangi qo'ng'iroq kelgandagi tartib
+   barqarorligini tekshiring.
+4. Tuzatilgandan keyin BUG-045ni, so'ng TC-060 va TC-370ni alohida takrorlang;
+   BUG-045 `xfail`ini faqat strict XPASSdan keyin olib tashlang.
+
+
+BUG-046. Ishlayotgan AmoCRMni qayta sinxronlash 409 konflikt bilan tugaydi
+----------------------------------------------------------------------------
+
+API / Web, Chromium-compatible browser | Backend API AmoCRM / Admin, ROP | staging | Ulanish faol va saqlangan tuzilma o'qiladi, ammo tuzilmani odatiy yangilash ishlamaydi.
+
+Muhimlik: P1, ROP yangi yoki o'zgargan voronka, status va maydonlarni ola olmaydi; navbat va AI-forma eskirgan tuzilma bilan ishlashi mumkin
+Holat: Yangi
+Sana: 03.08.2026
+
+Bog'liq test: UAT-SA-003
+
+Tavsif:
+Ajratilgan staging ROP uchun AmoCRM ulanishi faol. Saqlangan voronkalar,
+statuslar, formalar va maydonlar API orqali o'qiladi va «Qoidalar» bo'limida
+ko'rinadi. Ammo standart `POST /v1/amocrm/pipelines/sync` HTTP 409 va umumiy
+`konflikt yuz berdi` xabarini barqaror qaytaradi. Takroriy qo'lda so'rov ham
+xuddi shu natijani berdi.
+
+Qadamlar:
+1. Faol AmoCRM ulanishiga ega ROP sifatida stagingga kiring.
+2. `GET /v1/amocrm/pipelines` saqlangan voronkalarni qaytarishini tekshiring.
+3. `POST /v1/amocrm/pipelines/sync` yuboring.
+4. So'rovni takrorlang va natijalarni solishtiring.
+
+Kutilgan natija:
+Har bir sync so'rovi HTTP 200 va bo'sh bo'lmagan dolzarb voronkalar ro'yxatini
+qaytaradi. Takroriy ishga tushirish idempotent bo'ladi.
+
+Haqiqiy natija:
+Ikkala so'rov ham HTTP 409 Conflict qaytardi. Backend konflikt qaysi obyekt
+uchun yuz berganini ko'rsatmaydi, shu sabab ROP tuzilmani yangilay yoki sababni
+interfeys orqali tuzata olmaydi.
+
+Nuqson 03.08.2026 kuni kundalik UAT va alohida strict defect guard orqali
+takrorlandi. Integratsiya sirlari, identifikatorlar va lid ma'lumotlari natijaga
+chiqarilmadi.
+
+Ilova:
+1. Tozalangan javob: HTTP 409, `detail: konflikt yuz berdi`.
+2. `autotests/tests/api/integrations/test_bug_046_amocrm_pipeline_sync_conflict.py::test_bug_046_connected_amocrm_repeated_structure_sync_succeeds`
+   avtotesti.
+
+Qo'shimcha tekshiruv:
+1. Conflict qaytarayotgan aniq upsert/reconcile amalini toping va sirlarni
+   chiqarmaydigan xavfsiz server diagnostikasini qo'shing.
+2. Saqlangan pipeline, status, form, field va optionlar uchun takroriy syncni
+   idempotent qiling.
+3. O'chirilgan yoki nomi o'zgargan status/maydonlar va ketma-ket ikki syncni
+   tekshiring.
+4. Tuzatilgach guard-test strict XPASS olsin, keyin UAT-SA-003 kundalik
+   to'plamga qaytarilsin.
+
+
+BUG-047. WebRTC ro'yxatdan o'tganida tiklangan wrap-up sessiyasining tayyor AI natijasi ochilmaydi
+---------------------------------------------------------------------------------------------------
+
+Web, Chromium-compatible browser | Admin, Operator, qo'ng'iroq rejimi | staging
+
+Muhimlik: P1
+Holat: Tekshirildi, yopildi
+Sana: 03.08.2026
+Bog'liq test: UAT-OP-007
+
+Takrorlash qadamlari:
+1. Operator uchun tayyor AI submissionli faol `wrap_up` sessiyasini yarating.
+2. WebRTC ro'yxatdan o'tgan browserda qo'ng'iroq rejimini oching.
+3. «Qo'ng'iroqni boshlash»ni bosing.
+4. AI tasdiqlash oynasini kuting.
+
+Kutilgan natija:
+Admin tiklangan sessiyani tekshiradi, AI xulosasini ko'rsatadi va 20 soniyadan
+keyin natijani bir marta avtomatik saqlaydi.
+
+Tuzatish va qayta tekshiruv:
+Polling faqat faol browser-call uchun o'tkazib yuboriladi; `wrap_up` sessiya
+tekshiriladi. UAT-OP-007 stagingda muvaffaqiyatli o'tdi.
+
+
+BUG-048. Birinchi qo'ng'iroqning umumiy sababi Bugun keladi status sababini yashiradi
+--------------------------------------------------------------------------------------
+
+Web, Chromium-compatible browser | Admin, Operator, qo'ng'iroq sababi | staging
+
+Muhimlik: P2
+Holat: Tekshirildi, yopildi
+Sana: 03.08.2026
+Bog'liq test: UAT-FLOW-002
+
+Takrorlash qadamlari:
+1. Vaqti kelgan `Uchrashuv` fixture-lidini yarating.
+2. Staging o'tishini `Bugun keladi`ga bajaring.
+3. Vaqtinchalik Operator navbatini ochib lidni oling.
+4. «Qo'ng'iroq sababi» blokini tekshiring.
+
+Kutilgan natija:
+Operator «Bugun keladi — kelishini tasdiqlang» status sababini ko'radi.
+
+Tuzatish va qayta tekshiruv:
+Status sababi birinchi qo'ng'iroqning umumiy matnidan ustun qilindi.
+UAT-FLOW-002 stagingda muvaffaqiyatli o'tdi.

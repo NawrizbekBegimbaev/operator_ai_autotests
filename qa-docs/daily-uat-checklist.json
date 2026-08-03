@@ -1,15 +1,15 @@
 {
   "schema_version": "1.0",
   "updated_at": "2026-08-03",
-  "status": "approved_implementation_in_progress",
+  "status": "approved_implemented",
   "implementation": {
     "pytest_items": 33,
-    "implemented_handlers": 20,
-    "runnable_with_current_environment": 18,
+    "implemented_handlers": 27,
+    "runnable_with_current_environment": 26,
     "blocked_by_known_defect": 7,
-    "pending_external_setup_or_handler": 8,
-    "not_executed_in_latest_run": 8,
-    "latest_verified_run": "GitHub Actions 30804961048: 18/18 запущенных прошли; 8 не готовы к запуску; 7 заблокированы дефектами; 4 мин 05 сек",
+    "pending_external_setup_or_handler": 0,
+    "not_executed_in_latest_run": 0,
+    "latest_verified_run": "Staging 20260803-162603: 26/26 проверяемых прошли; 0 не готовы к запуску; 7 заблокированы дефектами; 5 мин 54 сек; Telegram доставлен",
     "marker": "daily_uat",
     "isolated_results_default": "uat-results/<Asia-Tashkent timestamp>",
     "telegram_delivery": "implemented; activation requires TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID",
@@ -36,21 +36,17 @@
     "planned_checkable": 26,
     "blocked_by_known_defect": 7,
     "ui_scenarios": 29,
-    "hybrid_ui_api_scenarios": 3,
-    "api_scenarios": 1,
+    "hybrid_ui_api_scenarios": 1,
+    "api_scenarios": 3,
     "estimated_checkable_seconds": 1230,
     "estimated_checkable_human": "20 мин 30 сек",
     "estimated_after_all_defect_fixes_seconds": 1720,
     "estimated_after_all_defect_fixes_human": "28 мин 40 сек"
   },
   "activation_gates": [
-    "Подтвердить SHA Backend, Admin и Landing, реально развёрнутые на staging.",
-    "Определить правильную стартовую страницу Оператора: /dashboard/home или /dashboard/calls.",
     "Исправить BUG-046: повторная синхронизация действующей AmoCRM должна возвращать 200.",
-    "Добавить staging-only fixture API для создания и полного удаления лидов, call state и AI session.",
     "Выделить тестовый OnlinePBX extension и безопасный номер; согласовать максимум один реальный звонок на прогон.",
     "Подтвердить доступную квоту Gemini и подготовить согласованное тестовое аудио без персональных данных.",
-    "Для demo-заявки предоставить удаляемый тестовый канал либо disposable Google Sheet; без cleanup сценарий не активируется.",
     "Перепроверить статусы BUG-014, BUG-017, BUG-024, BUG-026, BUG-027, BUG-029, BUG-038, BUG-045 и BUG-046."
   ],
   "scenarios": [
@@ -148,7 +144,7 @@
       "priority": "P1",
       "estimated_seconds": 20,
       "execution_state": "planned",
-      "automation_state": "adapt_existing_to_staging",
+      "automation_state": "implemented",
       "source_cases": ["TC-308", "TC-309", "TC-310"],
       "cleanup": "Не требуется: только чтение."
     },
@@ -169,10 +165,9 @@
       "priority": "P1",
       "estimated_seconds": 90,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-314", "TC-329", "TC-330", "TC-247", "TC-248"],
-      "activation_gate": "Нужен удаляемый тестовый канал БД/Google Sheets; без безопасного cleanup сценарий не активируется.",
-      "cleanup": "Удалить только сущности с уникальным UAT-префиксом и сверенным ID."
+      "cleanup": "Автоматически удалить demo-заявку и временного ROP по сверенным ID."
     },
     {
       "id": "UAT-SA-001",
@@ -545,10 +540,9 @@
       "priority": "P0",
       "estimated_seconds": 40,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-092", "TC-103", "TC-115", "TC-116", "TC-117", "TC-120"],
-      "activation_gate": "Нужен API/setup для уникального лида и безопасное снятие блокировки.",
-      "cleanup": "Закрыть сессию, снять lock и удалить/восстановить тестового лида."
+      "cleanup": "Автоматически удалить fixture-лида, сессию, назначение воронки и временного Operator."
     },
     {
       "id": "UAT-OP-005",
@@ -612,10 +606,9 @@
       "priority": "P1",
       "estimated_seconds": 50,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-131", "TC-135", "TC-137"],
-      "activation_gate": "Нужен безопасный способ подготовить готовую call session без второго реального звонка.",
-      "cleanup": "Удалить/сбросить сессию и тестового лида."
+      "cleanup": "Автоматически удалить AI-сессию, PBX fixture, лида, назначение и временного Operator."
     },
     {
       "id": "UAT-OP-008",
@@ -633,10 +626,9 @@
       "priority": "P1",
       "estimated_seconds": 25,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-105", "TC-106"],
-      "activation_gate": "Не проверяется возврат через реальные 30 минут; нужны два удаляемых тестовых лида.",
-      "cleanup": "Снять обе сессии/locks и удалить или восстановить лидов."
+      "cleanup": "Автоматически снять сессии/locks и удалить обоих лидов, назначение и временного Operator."
     },
     {
       "id": "UAT-OP-009",
@@ -683,23 +675,22 @@
     {
       "id": "UAT-FLOW-001",
       "role": "Operator",
-      "layer": "hybrid_ui_api",
+      "layer": "api",
       "screen": "Очередь обзвона",
       "scenario": "Очередь выдаёт лидов пяти рабочих классов в правильном порядке",
       "steps": [
         "Через тестовый setup создать по одному доступному лиду классов Bugun, Keyingi, Chala, Ko'tarmadi и Yangi.",
         "Назначить Operator нужную воронку.",
-        "Через UI последовательно получать лидов, закрывая тестовую сессию без реального звонка.",
+        "Через ключевой API очереди последовательно получать лидов, закрывая тестовую сессию без реального звонка.",
         "Записать порядок выдачи."
       ],
-      "expected_result": "UI выдаёт лидов в порядке Bugun → Keyingi → Chala → Ko'tarmadi → Yangi и показывает правильную причину каждого звонка.",
+      "expected_result": "Очередь выдаёт лидов в порядке Bugun → Keyingi → Chala → Ko'tarmadi → Yangi и возвращает правильную причину каждого звонка.",
       "priority": "P0",
       "estimated_seconds": 60,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-067", "TC-068", "TC-070", "TC-075", "TC-094", "TC-115", "TC-117"],
-      "activation_gate": "API применяется только для детерминированной подготовки пяти независимых лидов.",
-      "cleanup": "Закрыть сессии, снять locks и удалить/восстановить пять лидов."
+      "cleanup": "Автоматически закрыть сессии, снять locks и удалить пять лидов, назначение и временного Operator."
     },
     {
       "id": "UAT-FLOW-002",
@@ -717,32 +708,30 @@
       "priority": "P0",
       "estimated_seconds": 35,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-071", "TC-072", "TC-082", "TC-117"],
-      "activation_gate": "Нужен безопасный API/setup состояния без изменения системного времени и ожидания следующего дня.",
-      "cleanup": "Удалить/восстановить тестового лида и его расписание."
+      "cleanup": "Автоматически удалить fixture-лида, его расписание, назначение и временного Operator."
     },
     {
       "id": "UAT-FLOW-003",
       "role": "Operator",
-      "layer": "hybrid_ui_api",
+      "layer": "api",
       "screen": "Четвёртая попытка и AmoCRM",
       "scenario": "После четвёртой попытки лид становится Sifatsiz и исчезает из очереди",
       "steps": [
         "Создать тестового лида Ko'tarmadi с тремя уже учтёнными попытками.",
         "Через разрешённый тестовый API зафиксировать четвёртую попытку без реального звонка.",
         "Дождаться завершения перехода по условию с таймаутом.",
-        "Проверить статус в Operator AI и тестовой AmoCRM.",
-        "Открыть очередь Operator."
+        "Проверить локальный статус в Operator AI.",
+        "Проверить ключевой API очереди Operator."
       ],
-      "expected_result": "У лида ровно четыре попытки, статус Sifatsiz сохранён в обеих системах, лид больше не выдаётся в очередь.",
+      "expected_result": "У лида ровно четыре попытки, локальный статус стал Sifatsiz, лид больше не выдаётся в очередь; внешний AmoCRM не получает синтетические данные.",
       "priority": "P0",
       "estimated_seconds": 45,
       "execution_state": "planned",
-      "automation_state": "new",
+      "automation_state": "implemented",
       "source_cases": ["TC-074", "TC-084", "TC-087", "TC-334"],
-      "activation_gate": "Нужен безопасный способ инициировать переход без четырёх реальных звонков и ожидания фонового интервала.",
-      "cleanup": "Удалить тестового лида либо вернуть заранее согласованное исходное состояние."
+      "cleanup": "Автоматически удалить fixture-лида, попытки, назначение и временного Operator."
     }
   ]
 }
