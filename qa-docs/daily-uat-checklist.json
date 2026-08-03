@@ -9,7 +9,7 @@
     "blocked_by_known_defect": 7,
     "pending_external_setup_or_handler": 8,
     "not_executed_in_latest_run": 8,
-    "latest_verified_run": "18/18 запущенных прошли; 8 не готовы к запуску; 7 заблокированы дефектами; 4 мин 16 сек",
+    "latest_verified_run": "GitHub Actions 30804961048: 18/18 запущенных прошли; 8 не готовы к запуску; 7 заблокированы дефектами; 4 мин 05 сек",
     "marker": "daily_uat",
     "isolated_results_default": "uat-results/<Asia-Tashkent timestamp>",
     "telegram_delivery": "implemented; activation requires TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID",
