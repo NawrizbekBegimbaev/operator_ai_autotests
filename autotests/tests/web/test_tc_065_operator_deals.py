@@ -17,6 +17,10 @@ from autotests.pages.operator_deals_page import (
 AuthorizedPageFactory = Callable[[str], Page]
 
 
+class OperatorDealsContractError(RuntimeError):
+    """Staging не содержит обязательные данные для TC-065."""
+
+
 def _is_deals_list_response(response: APIResponse) -> bool:
     return (
         response.request.method == "GET"
@@ -76,7 +80,7 @@ def test_tc_065_operator_deals_show_status_attempts_and_details(
         and item.get("name")
     ]
     if not visible_items:
-        pytest.skip(
+        raise OperatorDealsContractError(
             "[TC-065 setup] у тестового оператора нет рабочих лидов"
         )
 

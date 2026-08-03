@@ -1,0 +1,69 @@
+name: Daily happy-path UAT
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+      timezone: "Asia/Tashkent"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: operator-ai-daily-uat-staging
+  cancel-in-progress: false
+
+jobs:
+  uat:
+    name: Staging UAT and Telegram report
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CI: "true"
+      TZ: Asia/Tashkent
+      OPERATOR_AI_TARGET_ENV: ${{ secrets.OPERATOR_AI_TARGET_ENV }}
+      OPERATOR_AI_WEB_BASE_URL: ${{ secrets.OPERATOR_AI_WEB_BASE_URL }}
+      OPERATOR_AI_API_BASE_URL: ${{ secrets.OPERATOR_AI_API_BASE_URL }}
+      OPERATOR_AI_LANDING_BASE_URL: ${{ secrets.OPERATOR_AI_LANDING_BASE_URL }}
+      OPERATOR_AI_SUPERADMIN_USERNAME: ${{ secrets.OPERATOR_AI_SUPERADMIN_USERNAME }}
+      OPERATOR_AI_SUPERADMIN_PASSWORD: ${{ secrets.OPERATOR_AI_SUPERADMIN_PASSWORD }}
+      OPERATOR_AI_ROP_USERNAME: ${{ secrets.OPERATOR_AI_ROP_USERNAME }}
+      OPERATOR_AI_ROP_PASSWORD: ${{ secrets.OPERATOR_AI_ROP_PASSWORD }}
+      OPERATOR_AI_OPERATOR_USERNAME: ${{ secrets.OPERATOR_AI_OPERATOR_USERNAME }}
+      OPERATOR_AI_OPERATOR_PASSWORD: ${{ secrets.OPERATOR_AI_OPERATOR_PASSWORD }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Install Chromium and system dependencies
+        run: python -m playwright install --with-deps chromium
+
+      - name: Run daily UAT and send Telegram report
+        run: >-
+          python scripts/run_daily_uat.py
+          --telegram always
+          --capture-pytest-output
+
+      - name: Upload human-readable results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: daily-uat-${{ github.run_id }}
+          path: |
+            uat-results/*/report.txt
+            uat-results/*/summary.json
+          if-no-files-found: warn
+          retention-days: 14

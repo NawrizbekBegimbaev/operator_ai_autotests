@@ -66,6 +66,13 @@ Wiki даёт короткое объяснение и ссылку на ист�
 | [Карта скоупа](06-scope-status.md) | Нужно понять, готова ли функция сейчас |
 | [400 тест-кейсов](07-test-cases.xlsx) | Ручной прогон и фиксация результата |
 | [Покрытие и Release Gate](08-release-readiness.md) | Подготовка решения GO/NO-GO |
+| [Автоматизированные тест-кейсы](10-automated-test-cases.md) | Быстро увидеть покрытые pytest кейсы и открыть их код |
+| [Ручные тест-кейсы](11-manual-test-cases.md) | Увидеть, какие кейсы ещё требуют ручной проверки |
+| [Разведка ежедневного UAT](12-daily-uat-discovery.md) | Согласовать роли, основной путь, ресурсы и ограничения до отбора ежедневных сценариев |
+| [Чеклист ежедневного happy-path UAT](13-daily-uat-checklist.md) | Согласовать минимальное позитивное покрытие всех активных функций до реализации |
+| [Структурированный UAT-чеклист](daily-uat-checklist.json) | Машиночитаемые UAT-ID, шаги, ожидания, приоритеты, время, cleanup и блокеры |
+| [Запуск и сопровождение ежедневного UAT](14-daily-uat-operations.md) | Runner, изолированные результаты, Telegram, расписание и правила красного дня |
+| [Первый технический UAT-прогон 03.08.2026](15-daily-uat-run-2026-08-03.md) | Фактические 12/27, ресурсные ворота, дефектные блокеры и время 3:24 |
 
 ## Правила, при которых нужно остановиться
 
@@ -155,6 +162,13 @@ bekor qilingan eski qoida.
 | [Scope xaritasi](06-scope-status.md) | Funksiya hozir tayyormi yoki yo‘qligini tushunish kerak bo‘lsa |
 | [400 ta test-keys](07-test-cases.xlsx) | Qo‘lda test o‘tkazish va natijani qayd etish uchun |
 | [Qamrov va Release Gate](08-release-readiness.md) | GO/NO-GO qarorini tayyorlash uchun |
+| [Avtomatlashtirilgan test-keyslar](10-automated-test-cases.md) | Pytest bilan qamrab olingan keyslar va ularning kodini tez topish uchun |
+| [Qo‘lda bajariladigan test-keyslar](11-manual-test-cases.md) | Hali qo‘lda tekshirilishi kerak bo‘lgan keyslarni ko‘rish uchun |
+| [Kunlik UAT razvedkasi (ruscha)](12-daily-uat-discovery.md) | Kundalik ssenariylarni tanlashdan oldin rollar, asosiy yo‘l, resurslar va cheklovlarni kelishish uchun |
+| [Kunlik happy-path UAT ro‘yxati (ruscha)](13-daily-uat-checklist.md) | Amalga oshirishdan oldin barcha faol funksiyalarning minimal ijobiy qamrovini kelishish uchun |
+| [Tuzilgan UAT ro‘yxati](daily-uat-checklist.json) | UAT-ID, qadamlar, kutilgan natijalar, ustuvorliklar, vaqt, cleanup va bloklovchilar |
+| [Kunlik UAT’ni ishga tushirish va kuzatish (ruscha)](14-daily-uat-operations.md) | Runner, alohida natijalar, Telegram, jadval va qizil kun qoidalari |
+| [03.08.2026 texnik UAT natijasi (ruscha)](15-daily-uat-run-2026-08-03.md) | Haqiqiy 12/27 natija, resurs to‘siqlari, defect bloklari va 3:24 vaqt |
 
 ### To‘xtash kerak bo‘lgan holatlar
 

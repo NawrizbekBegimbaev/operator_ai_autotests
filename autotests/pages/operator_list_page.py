@@ -69,6 +69,10 @@ class OperatorCreateDialog:
             "combobox",
             name=re.compile(r"^PBX extension"),
         )
+        self.extension_fallback_input = self.dialog.get_by_label(
+            "PBX extension (внутренний номер OnlinePBX, например 100)",
+            exact=True,
+        )
         self.salary_input = self.dialog.get_by_label("Зарплата", exact=True)
         self.salary_day_input = self.dialog.get_by_label(
             "День зарплаты",

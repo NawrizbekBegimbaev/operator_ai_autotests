@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 from collections.abc import Callable, Generator
 from datetime import date
@@ -21,6 +22,11 @@ from playwright.sync_api import Playwright
 from autotests.config import ConfigurationError, Settings
 from autotests.pages.login_page import LoginPage
 from autotests.support.login_rate_guard import LoginRateGuard
+from autotests.support.auth_requests import login, require_access_token
+from autotests.support.tenant_isolation import (
+    CrossTenantContext,
+    TenantActor,
+)
 from autotests.support.temporary_users import OperatorDraft, TemporaryOperator
 
 
@@ -145,6 +151,232 @@ def rop_api_request(
         yield request_context
     finally:
         request_context.dispose()
+
+
+def _json_object(
+    response: Any,
+    *,
+    checkpoint: str,
+    expected_status: int = 200,
+) -> dict[str, Any]:
+    assert response.status == expected_status, (
+        f"{checkpoint} ожидали HTTP {expected_status}, получили "
+        f"{response.status}: {response.text()}"
+    )
+    body = response.json()
+    assert isinstance(body, dict), (
+        f"{checkpoint} ожидали JSON-объект, получили {body!r}"
+    )
+    return body
+
+
+def _auth_headers(token: str) -> dict[str, str]:
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+
+
+@pytest.fixture(scope="session")
+def cross_tenant_context(
+    playwright: Playwright,
+    api_base_url: str,
+    role_api_token: RoleApiTokenProvider,
+    login_rate_guard: LoginRateGuard,
+) -> Generator[CrossTenantContext, None, None]:
+    """
+    Подготавливает межклиентскую проверку без постоянного второго РОП.
+
+    Текущий staging-РОП используется только для чтения как компания Б.
+    Компания А создаётся временно, получает одного временного оператора
+    и полностью удаляется после pytest-сессии.
+    """
+    superadmin_token = role_api_token("superadmin")
+    source_rop_token = role_api_token("rop")
+    superadmin_request = playwright.request.new_context(
+        base_url=api_base_url,
+        extra_http_headers=_auth_headers(superadmin_token),
+    )
+    source_rop_request = playwright.request.new_context(
+        base_url=api_base_url,
+        extra_http_headers=_auth_headers(source_rop_token),
+    )
+    anonymous_request = playwright.request.new_context(
+        base_url=api_base_url,
+        extra_http_headers={"Content-Type": "application/json"},
+    )
+    outsider_rop_request: APIRequestContext | None = None
+    outsider_operator_request: APIRequestContext | None = None
+    created_rop: dict[str, Any] | None = None
+    created_operator: dict[str, Any] | None = None
+
+    try:
+        source_rop = _json_object(
+            source_rop_request.get("/v1/auth/me"),
+            checkpoint="[cross_tenant setup] текущий РОП",
+        )
+        assert source_rop.get("role") == "rop", (
+            "[cross_tenant setup] источник данных должен иметь role='rop', "
+            f"получили {source_rop!r}"
+        )
+        source_operators_page = _json_object(
+            source_rop_request.get(
+                "/v1/users",
+                params={
+                    "filter": "role='operator'",
+                    "page": 1,
+                    "perPage": 100,
+                },
+            ),
+            checkpoint="[cross_tenant setup] операторы текущего РОП",
+        )
+        source_operators = source_operators_page.get("items")
+        assert isinstance(source_operators, list) and source_operators, (
+            "[cross_tenant setup] у текущего РОП должен быть хотя бы один "
+            "оператор для положительного контроля межклиентской изоляции."
+        )
+        source_operator = source_operators[0]
+        assert isinstance(source_operator, dict), (
+            "[cross_tenant setup] ожидали объект оператора, получили "
+            f"{source_operator!r}"
+        )
+
+        rop_unique_id = uuid4().hex
+        rop_username = f"AT-X-{rop_unique_id[:8]}"
+        rop_password = f"AT!X{rop_unique_id[:12]}"
+        created_rop = _json_object(
+            superadmin_request.post(
+                "/v1/rops",
+                data={
+                    "username": rop_username,
+                    "password": rop_password,
+                    "first_name": "AT-Outsider",
+                    "last_name": "Tenant",
+                    "phone": f"+99890{uuid4().int % 10_000_000:07d}",
+                    "company_name": f"AT-X-{uuid4().hex[:8]}",
+                    "tariff": "taxlil_dashboard",
+                },
+            ),
+            checkpoint="[cross_tenant setup] временный РОП",
+        )
+        assert created_rop.get("role") == "rop", (
+            "[cross_tenant setup] ожидали временного role='rop', получили "
+            f"{created_rop!r}"
+        )
+
+        outsider_rop_login = login(
+            anonymous_request,
+            login_rate_guard,
+            username=rop_username,
+            password=rop_password,
+        )
+        outsider_rop_token, outsider_rop_user = require_access_token(
+            outsider_rop_login,
+            checkpoint="[cross_tenant setup] вход временного РОП",
+        )
+        assert outsider_rop_user.get("id") == created_rop.get("id"), (
+            "[cross_tenant setup] после входа получили не временного РОП: "
+            f"{outsider_rop_user!r}"
+        )
+        outsider_rop_request = playwright.request.new_context(
+            base_url=api_base_url,
+            extra_http_headers=_auth_headers(outsider_rop_token),
+        )
+
+        operator_unique_id = uuid4().hex
+        operator_username = f"AT-X-{operator_unique_id[:8]}"
+        operator_password = f"AT!X{operator_unique_id[:12]}"
+        created_operator = _json_object(
+            outsider_rop_request.post(
+                "/v1/operators",
+                data={
+                    "username": operator_username,
+                    "password": operator_password,
+                    "first_name": "AT-Outsider",
+                    "last_name": "Operator",
+                    "phone": f"+99890{uuid4().int % 10_000_000:07d}",
+                    "pbx_extension": f"ATX{operator_unique_id[:6]}",
+                    "salary": 1,
+                    "salary_day": date.today().isoformat(),
+                },
+            ),
+            checkpoint="[cross_tenant setup] временный оператор",
+        )
+        assert created_operator.get("role") == "operator", (
+            "[cross_tenant setup] ожидали временного role='operator', "
+            f"получили {created_operator!r}"
+        )
+        assert created_operator.get("company_id") == created_rop.get("id"), (
+            "[cross_tenant setup] временный оператор принадлежит не своей "
+            f"компании: {created_operator!r}"
+        )
+
+        outsider_operator_login = login(
+            anonymous_request,
+            login_rate_guard,
+            username=operator_username,
+            password=operator_password,
+        )
+        outsider_operator_token, outsider_operator_user = (
+            require_access_token(
+                outsider_operator_login,
+                checkpoint="[cross_tenant setup] вход временного оператора",
+            )
+        )
+        assert outsider_operator_user.get("id") == created_operator.get("id"), (
+            "[cross_tenant setup] после входа получили не временного "
+            f"оператора: {outsider_operator_user!r}"
+        )
+        outsider_operator_request = playwright.request.new_context(
+            base_url=api_base_url,
+            extra_http_headers=_auth_headers(outsider_operator_token),
+        )
+
+        yield CrossTenantContext(
+            source=TenantActor(
+                rop=source_rop,
+                operator=source_operator,
+                rop_token=source_rop_token,
+            ),
+            outsider=TenantActor(
+                rop=created_rop,
+                operator=created_operator,
+                rop_token=outsider_rop_token,
+                operator_token=outsider_operator_token,
+            ),
+            source_rop_request=source_rop_request,
+            outsider_rop_request=outsider_rop_request,
+            outsider_operator_request=outsider_operator_request,
+        )
+    finally:
+        if outsider_rop_request is not None and created_operator is not None:
+            operator_id = created_operator.get("id")
+            if isinstance(operator_id, str) and operator_id:
+                response = outsider_rop_request.delete(
+                    f"/v1/users/{operator_id}"
+                )
+                assert response.status == 200, (
+                    "[cross_tenant teardown] при удалении временного "
+                    f"оператора ожидали 200, получили {response.status}: "
+                    f"{response.text()}"
+                )
+        if created_rop is not None:
+            rop_id = created_rop.get("id")
+            if isinstance(rop_id, str) and rop_id:
+                response = superadmin_request.delete(f"/v1/users/{rop_id}")
+                assert response.status == 200, (
+                    "[cross_tenant teardown] при удалении временного РОП "
+                    f"ожидали 200, получили {response.status}: "
+                    f"{response.text()}"
+                )
+
+        if outsider_operator_request is not None:
+            outsider_operator_request.dispose()
+        if outsider_rop_request is not None:
+            outsider_rop_request.dispose()
+        anonymous_request.dispose()
+        source_rop_request.dispose()
+        superadmin_request.dispose()
 
 
 @pytest.fixture(scope="session")
@@ -294,7 +526,8 @@ def temporary_operator(
 
 def _artifact_directory(node_id: str) -> Path:
     safe_node_id = re.sub(r"[^A-Za-z0-9_.-]+", "-", node_id).strip("-")
-    return Path("test-results") / safe_node_id
+    root = Path(os.getenv("OPERATOR_AI_ARTIFACT_DIR", "test-results"))
+    return root / safe_node_id
 
 
 @pytest.fixture
@@ -349,3 +582,23 @@ def pytest_runtest_makereport(
     outcome = yield
     report = outcome.get_result()
     setattr(item, f"rep_{report.when}", report)
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Добавляет UAT-ID в JUnit properties до выполнения теста/skip."""
+    seen_uat_ids: set[str] = set()
+    for item in items:
+        marker = item.get_closest_marker("uat_id")
+        if marker is None:
+            continue
+        if len(marker.args) != 1 or not isinstance(marker.args[0], str):
+            raise pytest.UsageError(
+                f"Некорректный @pytest.mark.uat_id у {item.nodeid}."
+            )
+        case_id = marker.args[0]
+        if case_id in seen_uat_ids:
+            raise pytest.UsageError(
+                f"UAT-ID {case_id} связан более чем с одним pytest-item."
+            )
+        seen_uat_ids.add(case_id)
+        item.user_properties.append(("uat_id", case_id))
