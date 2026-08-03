@@ -588,6 +588,27 @@ def _uat_op_001(request: pytest.FixtureRequest) -> None:
     )
 
 
+def _click_work_action(
+    page: Page,
+    *,
+    button_name: str,
+    endpoint: str,
+    checkpoint: str,
+) -> None:
+    button = page.get_by_role("button", name=button_name, exact=True)
+    expect(button).to_be_visible(timeout=15_000)
+    with page.expect_response(
+        lambda response: response.request.method == "POST"
+        and urlsplit(response.url).path == endpoint,
+        timeout=15_000,
+    ) as response_info:
+        button.click()
+    response = response_info.value
+    assert response.status == 200, (
+        f"{checkpoint}: действие не завершилось успешно, HTTP {response.status}."
+    )
+
+
 def _uat_op_002(request: pytest.FixtureRequest) -> None:
     temporary_operator = request.getfixturevalue("temporary_operator")
     browser = request.getfixturevalue("browser")
@@ -604,27 +625,115 @@ def _uat_op_002(request: pytest.FixtureRequest) -> None:
         login_rate_guard=login_rate_guard,
     ) as harness:
         harness.open_work_page(settings.web_base_url)
-        harness.page.get_by_role("button", name="Начать смену", exact=True).click()
-        expect(harness.page.get_by_text("Работает", exact=True)).to_be_visible()
-        harness.page.get_by_role("button", name="Перерыв", exact=True).click()
-        expect(harness.page.get_by_text("На перерыве", exact=True)).to_be_visible()
-        harness.page.get_by_role("button", name="Завершить перерыв", exact=True).click()
-        expect(harness.page.get_by_text("Работает", exact=True)).to_be_visible()
-        harness.page.get_by_role("button", name="Завершить смену", exact=True).click()
-        expect(harness.page.get_by_text("Не работает", exact=True)).to_be_visible()
+        _click_work_action(
+            harness.page,
+            button_name="Начать смену",
+            endpoint="/v1/operator-work/shift",
+            checkpoint="[UAT-OP-002] начало смены",
+        )
+        expect(harness.page.get_by_text("Работает", exact=True)).to_be_visible(
+            timeout=15_000
+        )
+        _click_work_action(
+            harness.page,
+            button_name="Перерыв",
+            endpoint="/v1/operator-work/break",
+            checkpoint="[UAT-OP-002] начало перерыва",
+        )
+        expect(harness.page.get_by_text("На перерыве", exact=True)).to_be_visible(
+            timeout=15_000
+        )
+        _click_work_action(
+            harness.page,
+            button_name="Завершить перерыв",
+            endpoint="/v1/operator-work/break",
+            checkpoint="[UAT-OP-002] завершение перерыва",
+        )
+        expect(harness.page.get_by_text("Работает", exact=True)).to_be_visible(
+            timeout=15_000
+        )
+        _click_work_action(
+            harness.page,
+            button_name="Завершить смену",
+            endpoint="/v1/operator-work/shift",
+            checkpoint="[UAT-OP-002] завершение смены",
+        )
+        expect(harness.page.get_by_text("Не работает", exact=True)).to_be_visible(
+            timeout=15_000
+        )
         harness.page.reload(wait_until="commit")
-        expect(harness.page.get_by_text("Не работает", exact=True)).to_be_visible()
+        expect(harness.page.get_by_text("Не работает", exact=True)).to_be_visible(
+            timeout=15_000
+        )
 
 
 def _uat_rop_006(request: pytest.FixtureRequest) -> None:
-    from autotests.tests.web.operator_work.test_tc_289_tc_290_attendance_ui import (
-        test_tc_290_attendance_rows_and_kpis_equal_source_items,
-    )
+    temporary_operator = request.getfixturevalue("temporary_operator")
+    browser = request.getfixturevalue("browser")
+    browser_context_args = request.getfixturevalue("browser_context_args")
+    playwright = request.getfixturevalue("playwright")
+    settings: Settings = request.getfixturevalue("test_settings")
+    login_rate_guard = request.getfixturevalue("login_rate_guard")
+    authorized_page_factory = request.getfixturevalue("authorized_page_factory")
+    full_name = f"{temporary_operator.first_name} {temporary_operator.last_name}"
 
-    test_tc_290_attendance_rows_and_kpis_equal_source_items(
-        request.getfixturevalue("authorized_page_factory"),
-        request.getfixturevalue("test_settings"),
-    )
+    with operator_work_harness(
+        temporary_operator=temporary_operator,
+        browser=browser,
+        browser_context_args=browser_context_args,
+        playwright=playwright,
+        test_settings=settings,
+        login_rate_guard=login_rate_guard,
+    ) as harness:
+        harness.open_work_page(settings.web_base_url)
+        _click_work_action(
+            harness.page,
+            button_name="Начать смену",
+            endpoint="/v1/operator-work/shift",
+            checkpoint="[UAT-ROP-006] начало смены оператора",
+        )
+        expect(harness.page.get_by_text("Работает", exact=True)).to_be_visible(
+            timeout=15_000
+        )
+
+        rop_page: Page = authorized_page_factory("rop")
+        with rop_page.expect_response(
+            lambda response: response.request.method == "GET"
+            and urlsplit(response.url).path == "/v1/operator-work/weekly",
+            timeout=15_000,
+        ) as open_attendance_info:
+            rop_page.goto(
+                f"{settings.web_base_url}/dashboard/attendance",
+                wait_until="commit",
+            )
+        assert open_attendance_info.value.status == 200, (
+            "[UAT-ROP-006] ROP не получил посещаемость после начала смены."
+        )
+        open_row = rop_page.get_by_role("row").filter(has_text=full_name)
+        expect(open_row).to_have_count(1, timeout=15_000)
+        expect(open_row.get_by_text("Открыта", exact=True)).to_be_visible()
+
+        _click_work_action(
+            harness.page,
+            button_name="Завершить смену",
+            endpoint="/v1/operator-work/shift",
+            checkpoint="[UAT-ROP-006] завершение смены оператора",
+        )
+        expect(harness.page.get_by_text("Не работает", exact=True)).to_be_visible(
+            timeout=15_000
+        )
+        with rop_page.expect_response(
+            lambda response: response.request.method == "GET"
+            and urlsplit(response.url).path == "/v1/operator-work/weekly",
+            timeout=15_000,
+        ) as closed_attendance_info:
+            rop_page.reload(wait_until="commit")
+        assert closed_attendance_info.value.status == 200, (
+            "[UAT-ROP-006] ROP не получил итог завершённой смены."
+        )
+        closed_row = rop_page.get_by_role("row").filter(has_text=full_name)
+        expect(closed_row).to_have_count(1, timeout=15_000)
+        expect(closed_row.get_by_text("Открыта", exact=True)).to_have_count(0)
 
 
 def _uat_op_009(request: pytest.FixtureRequest) -> None:
