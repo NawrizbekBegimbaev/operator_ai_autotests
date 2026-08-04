@@ -590,7 +590,11 @@ def _uat_op_007(request: pytest.FixtureRequest) -> None:
                 page.get_by_text("Рекомендация ИИ — подтвердите", exact=True)
             ).to_be_visible(timeout=15_000)
             expect(page.get_by_text("UAT: mijoz", exact=False)).to_be_visible()
-            expect(page.get_by_text("через 20 сек", exact=True)).to_be_visible()
+            # Счётчик тикает, пока идут проверки выше: сверять точную секунду
+            # нельзя, проверяем сам факт видимого обратного отсчёта.
+            expect(
+                page.get_by_text(re.compile(r"через \d{1,2} сек")).first
+            ).to_be_visible()
         assert confirmed_info.value.status == 200, (
             "UI не завершил автосохранение AI-результата."
         )
