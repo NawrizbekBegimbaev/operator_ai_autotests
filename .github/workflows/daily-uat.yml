@@ -63,6 +63,7 @@ jobs:
         with:
           name: daily-uat-${{ github.run_id }}
           path: |
+            uat-results/*/report.xlsx
             uat-results/*/report.txt
             uat-results/*/summary.json
           if-no-files-found: warn

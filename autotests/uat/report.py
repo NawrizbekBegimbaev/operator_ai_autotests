@@ -261,6 +261,18 @@ def render_human_report(report: UATReport) -> str:
     return "\n".join(lines)
 
 
+def load_report(path: Path) -> UATReport:
+    """Восстановить отчёт из summary.json прошедшего прогона."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload.pop("is_green", None)
+    roles = tuple(RoleOutcome(**item) for item in payload.pop("roles"))
+    outcomes = tuple(
+        CaseOutcome(**{**item, "blocked_by": tuple(item["blocked_by"])})
+        for item in payload.pop("outcomes")
+    )
+    return UATReport(**payload, roles=roles, outcomes=outcomes)
+
+
 def write_report_files(report: UATReport, output_dir: Path) -> tuple[Path, Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     text_path = output_dir / "report.txt"

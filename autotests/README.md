@@ -339,8 +339,9 @@ Headless-режим включён по умолчанию. Trace и screenshot 
 ```
 
 Runner собирает 33 pytest-item из `autotests/tests/uat`, создаёт уникальный
-`uat-results/<timestamp>`, формирует `report.txt` и `summary.json`, затем при
-полной Telegram-конфигурации доставляет человеческий отчёт. Неподготовленный
+`uat-results/<timestamp>`, формирует `report.xlsx` (узбекский, латиница),
+`report.txt` и `summary.json`, затем при полной Telegram-конфигурации
+отправляет Excel-файл в группу с короткой подписью. Неподготовленный
 ресурс отображается как «не выполнено», известный дефект — отдельно как
 `blocked_defect`; оба состояния запрещено считать `pass`.
 

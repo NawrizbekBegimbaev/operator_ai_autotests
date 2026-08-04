@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import json
+import mimetypes
 import os
+import uuid
 from dataclasses import dataclass
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
 TELEGRAM_MESSAGE_LIMIT = 4096
+TELEGRAM_CAPTION_LIMIT = 1024
+TELEGRAM_DOCUMENT_LIMIT_BYTES = 50 * 1024 * 1024
 
 
 class TelegramDeliveryError(RuntimeError):
@@ -69,18 +74,9 @@ def split_message(text: str, *, limit: int = 3900) -> list[str]:
     return chunks
 
 
-def _send_chunk(config: TelegramConfig, text: str) -> None:
-    payload = {"chat_id": config.chat_id, "text": text}
-    if config.thread_id:
-        payload["message_thread_id"] = config.thread_id
-    request = Request(
-        f"https://api.telegram.org/bot{config.bot_token}/sendMessage",
-        data=urlencode(payload).encode("utf-8"),
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-        method="POST",
-    )
+def _perform(request: Request, *, timeout: int = 20) -> None:
     try:
-        with urlopen(request, timeout=20) as response:
+        with urlopen(request, timeout=timeout) as response:
             response_body = response.read().decode("utf-8", errors="replace")
     except HTTPError as error:
         raise TelegramDeliveryError(
@@ -99,6 +95,93 @@ def _send_chunk(config: TelegramConfig, text: str) -> None:
         raise TelegramDeliveryError(
             f"Telegram отклонил сообщение: {description or 'неизвестная причина'}."
         )
+
+
+def _send_chunk(config: TelegramConfig, text: str) -> None:
+    payload = {"chat_id": config.chat_id, "text": text}
+    if config.thread_id:
+        payload["message_thread_id"] = config.thread_id
+    _perform(
+        Request(
+            f"https://api.telegram.org/bot{config.bot_token}/sendMessage",
+            data=urlencode(payload).encode("utf-8"),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            method="POST",
+        )
+    )
+
+
+def _multipart_body(
+    fields: dict[str, str],
+    *,
+    file_field: str,
+    file_name: str,
+    file_bytes: bytes,
+    boundary: str,
+) -> bytes:
+    parts: list[bytes] = []
+    for name, value in fields.items():
+        parts.append(
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="{name}"\r\n\r\n'
+            f"{value}\r\n".encode("utf-8")
+        )
+    content_type = (
+        mimetypes.guess_type(file_name)[0] or "application/octet-stream"
+    )
+    parts.append(
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="{file_field}"; '
+        f'filename="{file_name}"\r\n'
+        f"Content-Type: {content_type}\r\n\r\n".encode("utf-8")
+    )
+    parts.append(file_bytes)
+    parts.append(f"\r\n--{boundary}--\r\n".encode("utf-8"))
+    return b"".join(parts)
+
+
+def send_document(
+    config: TelegramConfig,
+    document: Path,
+    *,
+    caption: str = "",
+    file_name: str | None = None,
+) -> None:
+    """Отправить Excel-отчёт файлом с короткой подписью."""
+    if not document.exists():
+        raise TelegramDeliveryError(f"Файл отчёта не найден: {document.name}.")
+    payload_bytes = document.read_bytes()
+    if len(payload_bytes) > TELEGRAM_DOCUMENT_LIMIT_BYTES:
+        raise TelegramDeliveryError(
+            f"Файл {document.name} превышает лимит Telegram в 50 МБ."
+        )
+    if len(caption) > TELEGRAM_CAPTION_LIMIT:
+        caption = caption[: TELEGRAM_CAPTION_LIMIT - 1].rstrip() + "…"
+    fields = {"chat_id": config.chat_id}
+    if caption:
+        fields["caption"] = caption
+    if config.thread_id:
+        fields["message_thread_id"] = config.thread_id
+    boundary = f"----OperatorAIUAT{uuid.uuid4().hex}"
+    body = _multipart_body(
+        fields,
+        file_field="document",
+        file_name=file_name or document.name,
+        file_bytes=payload_bytes,
+        boundary=boundary,
+    )
+    _perform(
+        Request(
+            f"https://api.telegram.org/bot{config.bot_token}/sendDocument",
+            data=body,
+            headers={
+                "Content-Type": f"multipart/form-data; boundary={boundary}",
+                "Content-Length": str(len(body)),
+            },
+            method="POST",
+        ),
+        timeout=60,
+    )
 
 
 def send_report(config: TelegramConfig, text: str) -> int:

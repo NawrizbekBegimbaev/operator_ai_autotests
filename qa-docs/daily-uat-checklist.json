@@ -13,7 +13,8 @@
     "marker": "daily_uat",
     "isolated_results_default": "uat-results/<Asia-Tashkent timestamp>",
     "telegram_delivery": "implemented; activation requires TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID",
-    "excel_export": "blocked: required artifact-tool runtime is unavailable in the current session"
+    "excel_export": "implemented: openpyxl builds uat-results/<run>/report.xlsx in Uzbek (Latin); delivered to Telegram as a document",
+    "report_language": "uz-Latn; scenario translations live in autotests/uat/i18n_uz.py"
   },
   "purpose": "Минимальный ежедневный happy-path, отвечающий на вопрос: все активные пользовательские функции Operator AI сегодня работают на позитивном пути?",
   "selection_policy": {

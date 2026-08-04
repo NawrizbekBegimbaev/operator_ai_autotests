@@ -92,28 +92,45 @@ def main() -> int:
     else:
         completed = subprocess.run(command, cwd=PROJECT_ROOT, env=env, check=False)
 
+    from autotests.uat.excel import (
+        build_workbook,
+        excel_file_name,
+        render_caption_uz,
+    )
     from autotests.uat.report import build_report, render_human_report, write_report_files
-    from autotests.uat.telegram import TelegramConfig, TelegramDeliveryError, send_report
+    from autotests.uat.telegram import (
+        TelegramConfig,
+        TelegramDeliveryError,
+        send_document,
+    )
 
     report = build_report(junit_path, pytest_returncode=completed.returncode)
     text_path, json_path = write_report_files(report, run_dir)
     report_text = render_human_report(report)
+    excel_path = build_workbook(report, run_dir / "report.xlsx")
+    caption = render_caption_uz(report)
     print("\n" + report_text)
     print(f"\nРезультаты: {run_dir}")
     print(f"Текст: {text_path}")
     print(f"JSON: {json_path}")
+    print(f"Excel: {excel_path}")
 
     delivery_failed = False
     try:
         if args.telegram == "dry-run":
-            print("\n[Telegram dry-run]\n" + report_text)
+            print("\n[Telegram dry-run — подпись к файлу]\n" + caption)
         elif args.telegram != "never":
             config = TelegramConfig.from_env(required=args.telegram == "always")
             if config is None:
                 print("Telegram: пропущено — TELEGRAM_BOT_TOKEN/CHAT_ID не настроены.")
             else:
-                chunks = send_report(config, report_text)
-                print(f"Telegram: доставлено сообщений: {chunks}.")
+                send_document(
+                    config,
+                    excel_path,
+                    caption=caption,
+                    file_name=excel_file_name(report),
+                )
+                print(f"Telegram: Excel-отчёт доставлен ({excel_file_name(report)}).")
     except TelegramDeliveryError as error:
         delivery_failed = True
         print(f"Telegram: ошибка доставки: {error}", file=sys.stderr)
